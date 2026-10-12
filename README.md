@@ -39,10 +39,28 @@ React + TypeScript + Vite, com Firebase (Auth + Firestore) como backend.
 
 ```bash
 npm install
-npm run dev       # http://localhost:5173
+npm run dev          # http://localhost:5173
 npm run build && npm run preview   # testar PWA/service worker
-npm run lint
 ```
+
+## Qualidade
+
+| Comando | O que faz |
+| --- | --- |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | Checagem de tipos do TypeScript |
+| `npm test` | Testes unitários e de componentes (Vitest + Testing Library) |
+| `npm run coverage` | Testes com relatório de cobertura |
+| `npm run test:rules` | Testes das regras do Firestore no emulador (requer **Java 21**) |
+
+O GitHub Actions (`.github/workflows/ci.yml`) roda tudo isso a cada push e pull request.
+
+## Segurança
+
+- **Dados por usuário**: `firestore.rules` só permite que cada conta acesse `users/{uid}/cards` e valida o esquema de cada card. Coberto por `tests/firestore.rules.test.ts`.
+- **Headers HTTP** (`vercel.json`): CSP restrita aos domínios do Firebase/Google, `nosniff`, `Referrer-Policy`, `Permissions-Policy` e COOP compatível com o popup de login.
+- **Logout** apaga o cache offline do aparelho.
+- O `npm audit` aponta o `@grpc/grpc-js`, usado só pelo Firestore em Node (testes). Ele não entra no bundle do navegador.
 
 ## Deploy na Vercel
 
@@ -60,5 +78,7 @@ src/
   hooks/useAuth.ts     login/logout com Google
   hooks/useCards.ts    CRUD + sincronização em tempo real dos cards
   components/          LoginScreen, Dashboard, StudySession, CardForm, CardList, UserMenu
+tests/                 testes das regras do Firestore (emulador)
 firestore.rules        regras de segurança (por usuário)
+vercel.json            headers de segurança e cache
 ```
