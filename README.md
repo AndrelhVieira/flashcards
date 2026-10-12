@@ -51,7 +51,7 @@ npm run build && npm run preview   # testar PWA/service worker
 | `npm run typecheck` | Checagem de tipos do TypeScript |
 | `npm test` | Testes unitários e de componentes (Vitest + Testing Library) |
 | `npm run coverage` | Testes com relatório de cobertura |
-| `npm run test:rules` | Testes das regras do Firestore no emulador (requer **Java 21**) |
+| `npm run test:rules` | Testes das regras do Firestore no emulador (requer **Java 21**: `brew install openjdk@21`, detectado automaticamente) |
 
 O GitHub Actions (`.github/workflows/ci.yml`) roda tudo isso a cada push e pull request.
 
