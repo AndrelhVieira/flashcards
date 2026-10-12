@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Cada usuário só lê e escreve os próprios cards.
+    match /users/{uid}/cards/{cardId} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 10000
+        && request.resource.data.intervalDays is int
+        && request.resource.data.nextReview is string;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
