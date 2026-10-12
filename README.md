@@ -17,6 +17,8 @@ React + TypeScript + Vite, com Firebase (Auth + Firestore) como backend.
 
 ## Configuração do Firebase (uma vez)
 
+> Passo a passo detalhado, com deploy e checklist de aceite: [docs/GUIA-V1.md](docs/GUIA-V1.md).
+
 1. Crie um projeto em [console.firebase.google.com](https://console.firebase.google.com) (plano Spark, gratuito).
 2. **Authentication** → Sign-in method → ative **Google**.
 3. **Authentication** → Settings → **Authorized domains** → adicione o domínio da Vercel (ex.: `meu-app.vercel.app`). `localhost` já vem liberado.
