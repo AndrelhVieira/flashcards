@@ -1,19 +1,32 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Espelha o tipo Flashcard (sem o id, que é o id do documento).
+    function isValidCard(card) {
+      return card.keys().hasOnly(['title', 'description', 'intervalDays', 'nextReview',
+                                  'createdAt', 'lastReviewedAt', 'reviewCount'])
+        && card.keys().hasAll(['title', 'description', 'intervalDays', 'nextReview',
+                               'createdAt', 'lastReviewedAt', 'reviewCount'])
+        && card.title is string && card.title.size() > 0 && card.title.size() <= 200
+        && card.description is string && card.description.size() <= 10000
+        && card.intervalDays is int && card.intervalDays >= 1 && card.intervalDays <= 365
+        && card.nextReview is string && card.nextReview.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && card.createdAt is string && card.createdAt.size() <= 40
+        && (card.lastReviewedAt == null
+            || (card.lastReviewedAt is string && card.lastReviewedAt.size() <= 40))
+        && card.reviewCount is int && card.reviewCount >= 0;
+    }
+
     // Cada usuário só lê e escreve os próprios cards.
     match /users/{uid}/cards/{cardId} {
-      allow read, delete: if request.auth != null && request.auth.uid == uid;
-      allow create, update: if request.auth != null
-        && request.auth.uid == uid
-        && request.resource.data.title is string
-        && request.resource.data.title.size() > 0
-        && request.resource.data.title.size() <= 200
-        && request.resource.data.description is string
-        && request.resource.data.description.size() <= 10000
-        && request.resource.data.intervalDays is int
-        && request.resource.data.nextReview is string;
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isValidCard(request.resource.data);
     }
+
     match /{document=**} {
       allow read, write: if false;
     }

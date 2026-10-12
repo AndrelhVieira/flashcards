@@ -50,6 +50,7 @@ export function CardForm({ initial = EMPTY, submitLabel, onSubmit, onCancel }: P
           onChange={(e) => setDescription(e.target.value)}
           placeholder="A resposta ou explicação que você quer memorizar…"
           rows={4}
+          maxLength={10_000}
           required
         />
       </label>

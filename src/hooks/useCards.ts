@@ -21,18 +21,23 @@ function toData({ id: _id, ...data }: Flashcard): CardData {
   return data
 }
 
-/**
- * Escritas não são aguardadas: com o cache offline do Firestore a promise só
- * resolve quando o servidor confirma, mas a UI já é atualizada pelo snapshot local.
- */
-function fireAndForget(promise: Promise<unknown>) {
-  promise.catch((err) => console.error('Falha ao sincronizar card', err))
-}
-
 export function useCards(uid: string) {
   const [cards, setCards] = useState<Flashcard[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [syncError, setSyncError] = useState<string | null>(null)
+
+  /**
+   * Escritas não são aguardadas: com o cache offline do Firestore a promise só
+   * resolve quando o servidor confirma, mas a UI já é atualizada pelo snapshot local.
+   * Se o servidor rejeitar, o snapshot desfaz a alteração e avisamos o usuário.
+   */
+  const fireAndForget = useCallback((promise: Promise<unknown>) => {
+    promise.catch((err) => {
+      console.error('Falha ao sincronizar card', err)
+      setSyncError('Não foi possível salvar uma alteração. Verifique os dados e tente novamente.')
+    })
+  }, [])
 
   const cardsRef = useMemo(
     () => collection(db!, 'users', uid, 'cards') as CollectionReference<CardData>,
@@ -67,7 +72,7 @@ export function useCards(uid: string) {
       }
       fireAndForget(setDoc(doc(cardsRef), data))
     },
-    [cardsRef],
+    [cardsRef, fireAndForget],
   )
 
   const updateCard = useCallback(
@@ -79,12 +84,12 @@ export function useCards(uid: string) {
         current.intervalDays !== input.intervalDays ? addDays(input.intervalDays) : current.nextReview
       fireAndForget(updateDoc(doc(cardsRef, id), { ...input, nextReview }))
     },
-    [cards, cardsRef],
+    [cards, cardsRef, fireAndForget],
   )
 
   const deleteCard = useCallback(
     (id: string) => fireAndForget(deleteDoc(doc(cardsRef, id))),
-    [cardsRef],
+    [cardsRef, fireAndForget],
   )
 
   /** Registra uma revisão e agenda a próxima para daqui a `days` dias. */
@@ -101,12 +106,12 @@ export function useCards(uid: string) {
         }),
       )
     },
-    [cards, cardsRef],
+    [cards, cardsRef, fireAndForget],
   )
 
   const studyNow = useCallback(
     (id: string) => fireAndForget(updateDoc(doc(cardsRef, id), { nextReview: today() })),
-    [cardsRef],
+    [cardsRef, fireAndForget],
   )
 
   /** Adiciona vários cards de uma vez (importação). Mantém o id quando existir. */
@@ -120,8 +125,10 @@ export function useCards(uid: string) {
         fireAndForget(batch.commit())
       }
     },
-    [cardsRef],
+    [cardsRef, fireAndForget],
   )
 
-  return { cards, loading, error, addCard, updateCard, deleteCard, reviewCard, studyNow, importCards }
+  const dismissSyncError = useCallback(() => setSyncError(null), [])
+
+  return { cards, loading, error, syncError, dismissSyncError, addCard, updateCard, deleteCard, reviewCard, studyNow, importCards }
 }

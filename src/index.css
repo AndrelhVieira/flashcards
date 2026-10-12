@@ -685,6 +685,11 @@ code {
   font-size: 0.9rem;
 }
 
+.banner--error {
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface));
+  color: var(--danger);
+}
+
 .banner__actions {
   display: flex;
   gap: 8px;

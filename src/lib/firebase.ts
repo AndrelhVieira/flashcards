@@ -1,7 +1,9 @@
 import { initializeApp } from 'firebase/app'
 import { GoogleAuthProvider, getAuth } from 'firebase/auth'
 import {
+  clearIndexedDbPersistence,
   initializeFirestore,
+  terminate,
   persistentLocalCache,
   persistentMultipleTabManager,
 } from 'firebase/firestore'
@@ -30,3 +32,15 @@ export const db = app
 
 export const googleProvider = new GoogleAuthProvider()
 googleProvider.setCustomParameters({ prompt: 'select_account' })
+
+/** Apaga o cache offline do Firestore (dados do usuário que saiu ficam fora do aparelho). */
+export async function clearLocalCache() {
+  if (!db) return
+  try {
+    await terminate(db)
+    await clearIndexedDbPersistence(db)
+  } catch (err) {
+    // Falha se outra aba ainda usa o cache; ela será limpa no próximo logout.
+    console.warn('Não foi possível limpar o cache local', err)
+  }
+}

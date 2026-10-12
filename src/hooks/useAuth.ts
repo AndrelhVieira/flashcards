@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth'
 import { FirebaseError } from 'firebase/app'
-import { auth, googleProvider } from '../lib/firebase'
+import { auth, clearLocalCache, googleProvider } from '../lib/firebase'
 
 const IGNORED_ERRORS = new Set(['auth/popup-closed-by-user', 'auth/cancelled-popup-request'])
 
@@ -31,7 +31,11 @@ export function useAuth() {
   }, [])
 
   const logOut = useCallback(async () => {
-    if (auth) await signOut(auth)
+    if (!auth) return
+    await signOut(auth)
+    await clearLocalCache()
+    // O Firestore encerrado não pode ser reaberto; recarrega para um estado limpo.
+    window.location.reload()
   }, [])
 
   return { user, loading, error, signIn, logOut }

@@ -1,5 +1,5 @@
 import type { Flashcard } from '../types'
-import { today } from './dates'
+import { MAX_INTERVAL, today } from './dates'
 
 /** Chave usada pela versão sem login; lida apenas para migração. */
 const LEGACY_KEY = 'flashcards:v1'
@@ -14,11 +14,11 @@ function normalize(value: unknown): Flashcard | null {
     id: typeof c.id === 'string' && /^[\w-]{1,128}$/.test(c.id) ? c.id : '',
     title: c.title.slice(0, 200),
     description: c.description.slice(0, 10_000),
-    intervalDays: Number.isInteger(interval) && interval > 0 ? interval : 1,
+    intervalDays: Number.isInteger(interval) ? Math.min(Math.max(interval, 1), MAX_INTERVAL) : 1,
     nextReview: typeof c.nextReview === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(c.nextReview) ? c.nextReview : today(),
-    createdAt: typeof c.createdAt === 'string' ? c.createdAt : new Date().toISOString(),
-    lastReviewedAt: typeof c.lastReviewedAt === 'string' ? c.lastReviewedAt : null,
-    reviewCount: typeof c.reviewCount === 'number' ? c.reviewCount : 0,
+    createdAt: typeof c.createdAt === 'string' ? c.createdAt.slice(0, 40) : new Date().toISOString(),
+    lastReviewedAt: typeof c.lastReviewedAt === 'string' ? c.lastReviewedAt.slice(0, 40) : null,
+    reviewCount: Number.isInteger(c.reviewCount) && (c.reviewCount as number) >= 0 ? (c.reviewCount as number) : 0,
   }
 }
 

@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import type { User } from 'firebase/auth'
 import { useCards } from '../hooks/useCards'
 import { useOnline } from '../hooks/useOnline'
-import { isDue, today } from '../lib/dates'
+import { useToday } from '../hooks/useToday'
+import { isDue } from '../lib/dates'
 import { clearLegacyCards, exportCards, loadLegacyCards, readCardsFile } from '../lib/storage'
 import { CardForm } from './CardForm'
 import { CardList } from './CardList'
@@ -17,18 +18,31 @@ interface Props {
 }
 
 export function Dashboard({ user, onLogout }: Props) {
-  const { cards, loading, error, addCard, updateCard, deleteCard, reviewCard, studyNow, importCards } =
-    useCards(user.uid)
+  const {
+    cards,
+    loading,
+    error,
+    syncError,
+    dismissSyncError,
+    addCard,
+    updateCard,
+    deleteCard,
+    reviewCard,
+    studyNow,
+    importCards,
+  } = useCards(user.uid)
   const online = useOnline()
+  const currentDay = useToday()
   const [tab, setTab] = useState<Tab>('study')
   const [legacyCards, setLegacyCards] = useState(loadLegacyCards)
 
-  const dueCards = useMemo(() => {
-    const ref = today()
-    return cards
-      .filter((c) => isDue(c.nextReview, ref))
-      .sort((a, b) => a.nextReview.localeCompare(b.nextReview))
-  }, [cards])
+  const dueCards = useMemo(
+    () =>
+      cards
+        .filter((c) => isDue(c.nextReview, currentDay))
+        .sort((a, b) => a.nextReview.localeCompare(b.nextReview)),
+    [cards, currentDay],
+  )
 
   async function handleImportFile(file: File) {
     try {
@@ -78,6 +92,15 @@ export function Dashboard({ user, onLogout }: Props) {
               Importar
             </button>
           </div>
+        </div>
+      )}
+
+      {syncError && (
+        <div className="banner banner--error" role="alert">
+          <p>{syncError}</p>
+          <button className="btn btn--small btn--ghost" onClick={dismissSyncError}>
+            Fechar
+          </button>
         </div>
       )}
 

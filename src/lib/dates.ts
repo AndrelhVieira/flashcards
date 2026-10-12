@@ -1,3 +1,6 @@
+/** Maior intervalo aceito (também validado nas regras do Firestore). */
+export const MAX_INTERVAL = 365
+
 /** Intervalos disponíveis (em dias), em ordem crescente. */
 export const INTERVALS = [1, 3, 5, 7, 15, 30, 60] as const
 
