@@ -30,3 +30,6 @@ dist-ssr
 .vercel
 .firebase
 coverage
+
+# Firebase emulator
+*-debug.log
