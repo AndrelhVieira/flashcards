@@ -12,8 +12,9 @@ React + TypeScript + Vite, com Firebase (Auth + Firestore) como backend.
 - **Estudar**: mostra os cards vencidos. Toque para virar e escolha:
   - **Errei** → revisa amanhã · **Difícil** → mantém o intervalo · **Acertei** → próximo intervalo
   - ou qualquer intervalo manualmente
-- **Meus cards**: buscar, editar, excluir ou antecipar a revisão.
-- **Backup**: exportar/importar JSON pelo menu do avatar. Cards da versão antiga (localStorage) são oferecidos para importação no primeiro login.
+- **Meus cards**: buscar, filtrar por categoria, editar, excluir ou antecipar a revisão.
+- **Categorias**: crie categorias personalizadas e coloque cada card em quantas quiser. Na aba Estudar, escolha uma ou mais categorias para revisar só os cards vencidos delas (a escolha fica salva no aparelho).
+- **Backup**: exportar/importar JSON (cards e categorias) pelo menu do avatar; backups antigos, só com cards, continuam aceitos. Cards da versão antiga (localStorage) são oferecidos para importação no primeiro login.
 
 ## Configuração do Firebase (uma vez)
 
@@ -33,7 +34,7 @@ React + TypeScript + Vite, com Firebase (Auth + Firestore) como backend.
    cp .env.example .env.local   # e preencha os valores
    ```
 
-> As chaves `VITE_FIREBASE_*` são públicas por design (vão para o bundle). Quem protege os dados são as regras do Firestore: cada usuário só acessa `users/{seu uid}/cards`.
+> As chaves `VITE_FIREBASE_*` são públicas por design (vão para o bundle). Quem protege os dados são as regras do Firestore: cada usuário só acessa `users/{seu uid}/cards` e `users/{seu uid}/categories`.
 
 ## Desenvolvimento
 
@@ -57,7 +58,7 @@ O GitHub Actions (`.github/workflows/ci.yml`) roda tudo isso a cada push e pull 
 
 ## Segurança
 
-- **Dados por usuário**: `firestore.rules` só permite que cada conta acesse `users/{uid}/cards` e valida o esquema de cada card. Coberto por `tests/firestore.rules.test.ts`.
+- **Dados por usuário**: `firestore.rules` só permite que cada conta acesse `users/{uid}/cards` e `users/{uid}/categories` e valida o esquema de cada documento. Coberto por `tests/firestore.rules.test.ts`.
 - **Headers HTTP** (`vercel.json`): CSP restrita aos domínios do Firebase/Google, `nosniff`, `Referrer-Policy`, `Permissions-Policy` e COOP compatível com o popup de login.
 - **Logout** apaga o cache offline do aparelho.
 - O `npm audit` aponta o `@grpc/grpc-js`, usado só pelo Firestore em Node (testes). Ele não entra no bundle do navegador.
@@ -77,7 +78,9 @@ src/
   lib/storage.ts       import/export JSON e migração do localStorage
   hooks/useAuth.ts     login/logout com Google
   hooks/useCards.ts    CRUD + sincronização em tempo real dos cards
-  components/          LoginScreen, Dashboard, StudySession, CardForm, CardList, UserMenu
+  hooks/useCategories.ts  CRUD das categorias (excluir remove a categoria dos cards)
+  components/          LoginScreen, Dashboard, StudySession, CardForm, CardList, UserMenu,
+                       CategoryManager, CategoryPicker
 tests/                 testes das regras do Firestore (emulador)
 firestore.rules        regras de segurança (por usuário)
 vercel.json            headers de segurança e cache
