@@ -14,6 +14,7 @@ React + TypeScript + Vite, com Firebase (Auth + Firestore) como backend.
   - ou qualquer intervalo manualmente
 - **Meus cards**: buscar, filtrar por categoria, editar, excluir ou antecipar a revisão.
 - **Categorias**: crie categorias personalizadas e coloque cada card em quantas quiser. Na aba Estudar, escolha uma ou mais categorias para revisar só os cards vencidos delas (a escolha fica salva no aparelho).
+- **Landing page** (`/sobre/`): apresentação do projeto com demonstração interativa, linkada na tela de login. É uma entrada separada do Vite e não carrega o Firebase.
 - **Backup**: exportar/importar JSON (cards e categorias) pelo menu do avatar; backups antigos, só com cards, continuam aceitos. Cards da versão antiga (localStorage) são oferecidos para importação no primeiro login.
 
 ## Configuração do Firebase (uma vez)
@@ -76,11 +77,13 @@ src/
   lib/firebase.ts      inicialização do Firebase (Auth + Firestore com cache offline)
   lib/dates.ts         intervalos e cálculo de datas
   lib/storage.ts       import/export JSON e migração do localStorage
+  landing/             landing page (/sobre/): Landing, DemoDeck e estilos próprios
   hooks/useAuth.ts     login/logout com Google
   hooks/useCards.ts    CRUD + sincronização em tempo real dos cards
   hooks/useCategories.ts  CRUD das categorias (excluir remove a categoria dos cards)
   components/          LoginScreen, Dashboard, StudySession, CardForm, CardList, UserMenu,
                        CategoryManager, CategoryPicker
+sobre/index.html       HTML da landing page
 tests/                 testes das regras do Firestore (emulador)
 firestore.rules        regras de segurança (por usuário)
 vercel.json            headers de segurança e cache
