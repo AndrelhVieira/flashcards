@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { User } from 'firebase/auth'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -15,6 +15,12 @@ const state = vi.hoisted(() => ({
 }))
 vi.mock('../hooks/useCards', () => ({ useCards: () => state.current }))
 vi.mock('../hooks/useCategories', () => ({ useCategories: () => state.categories }))
+
+const storage = vi.hoisted(() => ({ exportBackup: vi.fn() }))
+vi.mock('../lib/storage', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../lib/storage')>()),
+  exportBackup: storage.exportBackup,
+}))
 
 const { Dashboard } = await import('./Dashboard')
 
@@ -62,6 +68,7 @@ describe('Dashboard', () => {
 
   afterEach(() => {
     vi.useRealTimers()
+    vi.restoreAllMocks()
     localStorage.clear()
   })
 
@@ -174,6 +181,97 @@ describe('Dashboard', () => {
       mockCards({ cards: [makeCard()] })
       render(<Dashboard user={user} onLogout={vi.fn()} />)
       expect(screen.queryByRole('group', { name: 'Revisar categorias' })).not.toBeInTheDocument()
+    })
+  })
+
+  describe('backup e categorias', () => {
+    const category = makeCategory({ id: 'js', name: 'JavaScript' })
+    const card = makeCard({ id: 'a', categoryIds: ['js'] })
+
+    function backupFile(content: unknown) {
+      return new File([JSON.stringify(content)], 'backup.json', { type: 'application/json' })
+    }
+
+    async function importFile(file: File) {
+      const { container } = render(<Dashboard user={user} onLogout={vi.fn()} />)
+      await userEvent.upload(container.querySelector<HTMLInputElement>('input[type="file"]')!, file)
+    }
+
+    it('exporta cards e categorias', async () => {
+      mockCategories({ categories: [category] })
+      mockCards({ cards: [card] })
+      render(<Dashboard user={user} onLogout={vi.fn()} />)
+
+      await userEvent.click(screen.getByLabelText('Menu da conta'))
+      await userEvent.click(screen.getByRole('button', { name: 'Exportar backup' }))
+      expect(storage.exportBackup).toHaveBeenCalledWith([card], [category])
+    })
+
+    it('importa cards e categorias após confirmação', async () => {
+      const categories = mockCategories()
+      const cards = mockCards()
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+      await importFile(backupFile({ version: 2, categories: [category], cards: [card] }))
+
+      await waitFor(() => expect(cards.importCards).toHaveBeenCalledWith([card]))
+      expect(categories.importCategories).toHaveBeenCalledWith([category])
+      expect(confirm).toHaveBeenCalledWith(expect.stringContaining('1 cards e 1 categorias'))
+    })
+
+    it('importa backups antigos, só com cards', async () => {
+      const categories = mockCategories()
+      const cards = mockCards()
+      vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+      await importFile(backupFile([card]))
+
+      await waitFor(() => expect(cards.importCards).toHaveBeenCalledWith([card]))
+      expect(categories.importCategories).toHaveBeenCalledWith([])
+    })
+
+    it('não importa nada se o usuário cancelar', async () => {
+      const categories = mockCategories()
+      const cards = mockCards()
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+
+      await importFile(backupFile([card]))
+
+      await waitFor(() => expect(confirm).toHaveBeenCalled())
+      expect(cards.importCards).not.toHaveBeenCalled()
+      expect(categories.importCategories).not.toHaveBeenCalled()
+    })
+
+    it('avisa quando o arquivo é inválido', async () => {
+      mockCards()
+      const alert = vi.spyOn(window, 'alert').mockImplementation(() => {})
+
+      await importFile(new File(['não é json'], 'backup.json', { type: 'application/json' }))
+
+      await waitFor(() => expect(alert).toHaveBeenCalledWith(expect.stringMatching(/arquivo inválido/i)))
+    })
+
+    it('ao excluir uma categoria, passa os cards para a limpeza', async () => {
+      const categories = mockCategories({ categories: [category] })
+      mockCards({ cards: [card] })
+      vi.spyOn(window, 'confirm').mockReturnValue(true)
+      render(<Dashboard user={user} onLogout={vi.fn()} />)
+
+      await userEvent.click(screen.getByRole('tab', { name: /meus cards/i }))
+      await userEvent.click(screen.getByText('Categorias', { selector: 'summary' }))
+      await userEvent.click(screen.getByRole('button', { name: 'Excluir JavaScript' }))
+      expect(categories.deleteCategory).toHaveBeenCalledWith('js', [card])
+    })
+
+    it('mostra erro de sincronização das categorias e fecha os dois avisos', async () => {
+      const categories = mockCategories({ syncError: 'Falhou categoria' })
+      const cards = mockCards()
+      render(<Dashboard user={user} onLogout={vi.fn()} />)
+
+      expect(screen.getByRole('alert')).toHaveTextContent('Falhou categoria')
+      await userEvent.click(screen.getByRole('button', { name: 'Fechar' }))
+      expect(categories.dismissSyncError).toHaveBeenCalled()
+      expect(cards.dismissSyncError).toHaveBeenCalled()
     })
   })
 })
