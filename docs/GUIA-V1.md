@@ -180,6 +180,40 @@ git push origin v1.0.0
 
 ---
 
+## 11. v1.1 — Categorias
+
+### Ordem do deploy
+
+1. [ ] CI do PR verde, **incluindo o job das regras** (`test:rules`)
+2. [ ] Publicar as regras **antes** do merge (o app novo grava `categoryIds` em todo card e falha com as regras antigas; as novas aceitam o app atual):
+   ```bash
+   npx firebase-tools deploy --only firestore:rules --project flashcards-d4ad8
+   ```
+3. [ ] Merge na `main` (a Vercel publica sozinha)
+4. [ ] Tag da versão:
+   ```bash
+   git tag -a v1.1.0 -m "v1.1.0"
+   git push origin v1.1.0
+   ```
+
+### Checklist de aceite
+
+- [ ] Cards criados antes da v1.1 continuam aparecendo, editáveis e revisáveis
+- [ ] Criar, renomear e excluir categorias em **Meus cards → Categorias**
+- [ ] Nome repetido é recusado (inclusive com maiúsculas/acentos diferentes)
+- [ ] Ao criar/editar um card, marcar uma ou mais categorias; elas aparecem no card da lista
+- [ ] Filtro por categoria na lista de cards
+- [ ] Excluir uma categoria a remove dos cards, sem excluir os cards
+- [ ] **Estudar**: filtro mostra os vencidos de cada categoria; selecionar várias revisa os vencidos de qualquer uma delas; o contador da aba continua com o total
+- [ ] Quando as categorias escolhidas acabam, o botão **Revisar todas as categorias** volta para a revisão completa
+- [ ] A seleção do estudo é lembrada ao recarregar o app
+- [ ] Categorias sincronizam entre dispositivos e funcionam offline
+- [ ] Exportar backup inclui as categorias; importar restaura cards e categorias com os vínculos
+- [ ] Importar um backup antigo (só cards) continua funcionando
+- [ ] Layout do painel e dos filtros ok no celular
+
+---
+
 ## Problemas comuns
 
 | Sintoma | Causa provável | Solução |
@@ -188,6 +222,7 @@ git push origin v1.0.0
 | Erro `auth/unauthorized-domain` | Domínio não autorizado | Passo 8 |
 | "Não foi possível entrar com o Google" | Popup bloqueado ou Google desativado | Liberar popups para o site; conferir o passo 3 |
 | "Não foi possível carregar seus cards" | Regras não publicadas ou banco não criado | Passos 4 e 5; ver erro `permission-denied` no console do navegador |
+| "Não foi possível salvar uma alteração" ao criar card/categoria (após a v1.1) | Regras antigas ainda publicadas | Publicar as regras (seção 11, passo 2) |
 | Versão nova não aparece no app instalado | Service worker ainda com a versão antiga | Fechar e reabrir o app (atualiza automaticamente); em último caso, reinstalar |
 | Nome estranho (`project-123...`) na tela do Google | Nome público não definido | Passo 3, item 3 |
 
@@ -197,4 +232,4 @@ git push origin v1.0.0
 
 - Domínio próprio na Vercel (Settings → Domains) — lembre de autorizá-lo no Firebase
 - Alertas de orçamento no Google Cloud, por precaução (o plano Spark não cobra, mas é bom ter)
-- Ideias de evolução: baralhos/tags, estatísticas de estudo, lembrete diário via notificação, suporte a imagens/Markdown nos cards
+- Ideias de evolução: estatísticas de estudo, lembrete diário via notificação, suporte a imagens/Markdown nos cards
