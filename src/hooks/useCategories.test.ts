@@ -6,9 +6,9 @@ const fs = vi.hoisted(() => ({
   snapshotCallback: null as null | ((snap: unknown) => void),
   setDoc: vi.fn(() => Promise.resolve()),
   updateDoc: vi.fn(() => Promise.resolve()),
+  deleteDoc: vi.fn(() => Promise.resolve()),
   batchSet: vi.fn(),
   batchUpdate: vi.fn(),
-  batchDelete: vi.fn(),
   batchCommit: vi.fn(() => Promise.resolve()),
 }))
 
@@ -23,7 +23,8 @@ vi.mock('firebase/firestore', () => ({
   arrayRemove: (value: string) => ({ arrayRemove: value }),
   setDoc: fs.setDoc,
   updateDoc: fs.updateDoc,
-  writeBatch: () => ({ set: fs.batchSet, update: fs.batchUpdate, delete: fs.batchDelete, commit: fs.batchCommit }),
+  deleteDoc: fs.deleteDoc,
+  writeBatch: () => ({ set: fs.batchSet, update: fs.batchUpdate, commit: fs.batchCommit }),
 }))
 
 const { useCategories } = await import('./useCategories')
@@ -69,7 +70,7 @@ describe('useCategories', () => {
     ]
     act(() => result.current.deleteCategory('js', cards))
 
-    expect(fs.batchDelete).toHaveBeenCalledWith({ path: 'users/uid-1/categories/js', id: 'js' })
+    expect(fs.deleteDoc).toHaveBeenCalledWith({ path: 'users/uid-1/categories/js', id: 'js' })
     expect(fs.batchUpdate).toHaveBeenCalledTimes(1)
     expect(fs.batchUpdate).toHaveBeenCalledWith(
       { path: 'users/uid-1/cards/a', id: 'a' },
@@ -83,9 +84,25 @@ describe('useCategories', () => {
     const cards = Array.from({ length: 1000 }, (_, i) => makeCard({ id: `c${i}`, categoryIds: ['js'] }))
     act(() => result.current.deleteCategory('js', cards))
 
-    expect(fs.batchDelete).toHaveBeenCalledTimes(1)
+    expect(fs.deleteDoc).toHaveBeenCalledTimes(1)
     expect(fs.batchUpdate).toHaveBeenCalledTimes(1000)
     expect(fs.batchCommit).toHaveBeenCalledTimes(3)
+  })
+
+  it('exclui a categoria mesmo sem cards para limpar', () => {
+    const { result } = renderHook(() => useCategories('uid-1'))
+    act(() => result.current.deleteCategory('js', [makeCard({ categoryIds: ['react'] })]))
+    expect(fs.deleteDoc).toHaveBeenCalledTimes(1)
+    expect(fs.batchCommit).not.toHaveBeenCalled()
+  })
+
+  it('a falha na limpeza dos cards não desfaz a exclusão da categoria', async () => {
+    fs.batchCommit.mockReturnValueOnce(Promise.reject(new Error('not-found')))
+    const { result } = renderHook(() => useCategories('uid-1'))
+    act(() => result.current.deleteCategory('js', [makeCard({ categoryIds: ['js'] })]))
+
+    expect(fs.deleteDoc).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(result.current.syncError).not.toBeNull())
   })
 
   it('importa mantendo os ids e sem gravar o campo id', () => {

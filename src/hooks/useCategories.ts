@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   arrayRemove,
   collection,
+  deleteDoc,
   doc,
   onSnapshot,
   setDoc,
@@ -65,11 +66,12 @@ export function useCategories(uid: string) {
   /** Exclui a categoria e a remove dos cards que a usam (os cards são mantidos). */
   const deleteCategory = useCallback(
     (id: string, cards: Flashcard[]) => {
+      // Escrita própria: se um card já tiver sido excluído em outro aparelho, a falha
+      // da limpeza não desfaz a exclusão. Ids órfãos que sobrarem são ignorados pela UI.
+      fireAndForget(deleteDoc(doc(categoriesRef, id)))
       const affected = cards.filter((c) => c.categoryIds.includes(id))
-      // O primeiro lote exclui a categoria; os seguintes só limpam os cards restantes.
-      for (let i = 0; i === 0 || i < affected.length; i += BATCH_LIMIT) {
+      for (let i = 0; i < affected.length; i += BATCH_LIMIT) {
         const batch = writeBatch(db!)
-        if (i === 0) batch.delete(doc(categoriesRef, id))
         for (const card of affected.slice(i, i + BATCH_LIMIT)) {
           batch.update(doc(cardsRef, card.id), { categoryIds: arrayRemove(id) })
         }
