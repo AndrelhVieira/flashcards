@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { clearLegacyCards, loadLegacyCards, parseCards, readCardsFile } from './storage'
-import { makeCard } from '../test/fixtures'
+import {
+  clearLegacyCards,
+  loadLegacyCards,
+  loadStudyFilter,
+  parseBackup,
+  parseCards,
+  readBackupFile,
+  saveStudyFilter,
+} from './storage'
+import { makeCard, makeCategory } from '../test/fixtures'
 
 describe('parseCards', () => {
   beforeEach(() => {
@@ -62,6 +70,16 @@ describe('parseCards', () => {
     expect(card.reviewCount).toBe(0)
   })
 
+  it('mantém só ids de categoria válidos, sem repetição', () => {
+    const [card] = parseCards([
+      { title: 'a', description: 'b', categoryIds: ['js', 'js', 'a/b', 3, ...Array.from({ length: 30 }, (_, i) => `c${i}`)] },
+    ])
+    expect(card.categoryIds[0]).toBe('js')
+    expect(card.categoryIds).toHaveLength(20)
+    expect(card.categoryIds).not.toContain('a/b')
+    expect(parseCards([{ title: 'a', description: 'b' }])[0].categoryIds).toEqual([])
+  })
+
   it('usa intervalo 1 para valores inválidos', () => {
     const cards = parseCards([
       { title: 'a', description: 'b', intervalDays: 0 },
@@ -72,15 +90,57 @@ describe('parseCards', () => {
   })
 })
 
+describe('parseBackup', () => {
+  it('aceita o formato antigo, só com a lista de cards', () => {
+    expect(parseBackup([makeCard()])).toEqual({ cards: [makeCard()], categories: [] })
+  })
+
+  it('lê cards e categorias do formato atual', () => {
+    const backup = { version: 2, categories: [makeCategory()], cards: [makeCard({ categoryIds: ['cat-1'] })] }
+    expect(parseBackup(backup)).toEqual({ cards: backup.cards, categories: backup.categories })
+  })
+
+  it('descarta categorias sem id válido ou sem nome e limita o nome', () => {
+    const { categories } = parseBackup({
+      cards: [],
+      categories: [{ name: 'Sem id' }, { id: 'a/b', name: 'x' }, { id: 'vazia', name: '  ' }, { id: 'ok', name: ` ${'x'.repeat(80)} ` }],
+    })
+    expect(categories).toHaveLength(1)
+    expect(categories[0].name).toHaveLength(50)
+  })
+
+  it('rejeita formatos desconhecidos', () => {
+    expect(() => parseBackup(null)).toThrow()
+    expect(() => parseBackup({ categories: [] })).toThrow()
+  })
+})
+
 describe('backup em arquivo', () => {
   it('lê um backup JSON exportado', async () => {
-    const file = new File([JSON.stringify([makeCard()])], 'backup.json')
-    await expect(readCardsFile(file)).resolves.toEqual([makeCard()])
+    const file = new File([JSON.stringify({ version: 2, categories: [], cards: [makeCard()] })], 'backup.json')
+    await expect(readBackupFile(file)).resolves.toEqual({ cards: [makeCard()], categories: [] })
   })
 
   it('falha com JSON inválido', async () => {
     const file = new File(['não é json'], 'backup.json')
-    await expect(readCardsFile(file)).rejects.toThrow()
+    await expect(readBackupFile(file)).rejects.toThrow()
+  })
+})
+
+describe('filtro de categorias do estudo', () => {
+  afterEach(() => localStorage.clear())
+
+  it('salva por usuário e limpa quando vazio', () => {
+    saveStudyFilter('u1', ['js'])
+    expect(loadStudyFilter('u1')).toEqual(['js'])
+    expect(loadStudyFilter('u2')).toEqual([])
+    saveStudyFilter('u1', [])
+    expect(localStorage.getItem('flashcards:study-categories:u1')).toBeNull()
+  })
+
+  it('ignora conteúdo corrompido', () => {
+    localStorage.setItem('flashcards:study-categories:u1', '{x')
+    expect(loadStudyFilter('u1')).toEqual([])
   })
 })
 

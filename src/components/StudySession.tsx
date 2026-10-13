@@ -7,13 +7,17 @@ interface Props {
   dueCards: Flashcard[]
   onReview: (id: string, days: number) => void
   onGoToCards: () => void
+  /** Informado quando há um filtro de categorias escondendo outros cards vencidos. */
+  onClearFilter?: () => void
 }
 
-export function StudySession({ dueCards, onReview, onGoToCards }: Props) {
-  const [revealed, setRevealed] = useState(false)
+export function StudySession({ dueCards, onReview, onGoToCards, onClearFilter }: Props) {
+  // Guarda o id do card virado: se o card atual mudar (ex.: troca de filtro), volta para a frente.
+  const [revealedId, setRevealedId] = useState<string | null>(null)
   const [reviewedCount, setReviewedCount] = useState(0)
   const actionsRef = useRef<HTMLDivElement>(null)
   const card = dueCards[0]
+  const revealed = !!card && revealedId === card.id
 
   // No celular os botões de avaliação ficam abaixo da dobra.
   useEffect(() => {
@@ -27,7 +31,7 @@ export function StudySession({ dueCards, onReview, onGoToCards }: Props) {
       if (e.target instanceof HTMLElement && e.target.closest('input, textarea, button')) return
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault()
-        setRevealed(true)
+        setRevealedId(card.id)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -38,22 +42,30 @@ export function StudySession({ dueCards, onReview, onGoToCards }: Props) {
     return (
       <section className="empty">
         <div className="empty__icon" aria-hidden>🎉</div>
-        <h2>Tudo em dia!</h2>
+        <h2>{onClearFilter ? 'Categorias em dia!' : 'Tudo em dia!'}</h2>
         <p>
           {reviewedCount > 0
             ? `Você revisou ${reviewedCount} ${reviewedCount === 1 ? 'card' : 'cards'} nesta sessão.`
-            : 'Nenhum card para revisar hoje.'}
+            : onClearFilter
+              ? 'Nenhum card dessas categorias para revisar hoje.'
+              : 'Nenhum card para revisar hoje.'}
         </p>
-        <button className="btn btn--primary" onClick={onGoToCards}>
-          Gerenciar cards
-        </button>
+        {onClearFilter ? (
+          <button className="btn btn--primary" onClick={onClearFilter}>
+            Revisar todas as categorias
+          </button>
+        ) : (
+          <button className="btn btn--primary" onClick={onGoToCards}>
+            Gerenciar cards
+          </button>
+        )}
       </section>
     )
   }
 
   function review(days: number) {
     onReview(card.id, days)
-    setRevealed(false)
+    setRevealedId(null)
     setReviewedCount((n) => n + 1)
   }
 
@@ -69,7 +81,7 @@ export function StudySession({ dueCards, onReview, onGoToCards }: Props) {
         key={card.id}
         type="button"
         className={`flashcard${revealed ? ' flashcard--revealed' : ''}`}
-        onClick={() => setRevealed((r) => !r)}
+        onClick={() => setRevealedId(revealed ? null : card.id)}
         aria-label={revealed ? 'Mostrar frente' : 'Mostrar resposta'}
       >
         <div className="flashcard__inner">

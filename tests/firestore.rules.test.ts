@@ -20,6 +20,8 @@ const validCard = {
   reviewCount: 0,
 }
 
+const validCategory = { name: 'JavaScript', createdAt: '2026-10-12T12:00:00.000Z' }
+
 const alice = () => env.authenticatedContext('alice').firestore()
 const bob = () => env.authenticatedContext('bob').firestore()
 const anon = () => env.unauthenticatedContext().firestore()
@@ -63,6 +65,7 @@ describe('isolamento entre usuários', () => {
 
   it('bloqueia qualquer outra coleção', async () => {
     await assertFails(setDoc(doc(alice(), 'outros/doc'), { a: 1 }))
+    await assertFails(setDoc(doc(alice(), 'users/alice/outros/doc'), { a: 1 }))
     await assertFails(getDoc(doc(alice(), 'users/alice')))
     await assertFails(setDoc(doc(alice(), 'users/alice'), { a: 1 }))
   })
@@ -74,6 +77,8 @@ describe('validação do card', () => {
   it('aceita um card válido', async () => {
     await assertSucceeds(create(validCard))
     await assertSucceeds(create({ ...validCard, lastReviewedAt: '2026-10-12T12:00:00.000Z' }))
+    await assertSucceeds(create({ ...validCard, categoryIds: [] }))
+    await assertSucceeds(create({ ...validCard, categoryIds: ['js', 'react'] }))
   })
 
   it.each([
@@ -88,6 +93,8 @@ describe('validação do card', () => {
     ['contador negativo', { reviewCount: -1 }],
     ['lastReviewedAt numérico', { lastReviewedAt: 123 }],
     ['campo extra', { isAdmin: true }],
+    ['categorias que não são lista', { categoryIds: 'js' }],
+    ['categorias demais', { categoryIds: Array.from({ length: 21 }, (_, i) => `c${i}`) }],
   ])('recusa %s', async (_label, patch) => {
     await assertFails(create({ ...validCard, ...patch }))
   })
@@ -102,5 +109,39 @@ describe('validação do card', () => {
     await assertFails(updateDoc(ref, { intervalDays: 1000 }))
     await assertFails(updateDoc(ref, { extra: 'x' }))
     await assertSucceeds(updateDoc(ref, { intervalDays: 7, nextReview: '2026-10-19' }))
+  })
+})
+
+describe('categorias', () => {
+  const ref = (db = alice(), id = 'js') => doc(db, `users/alice/categories/${id}`)
+
+  it('dono cria, lê, renomeia e exclui as próprias categorias', async () => {
+    await assertSucceeds(setDoc(ref(), validCategory))
+    await assertSucceeds(getDocs(collection(alice(), 'users/alice/categories')))
+    await assertSucceeds(updateDoc(ref(), { name: 'TypeScript' }))
+    await assertSucceeds(deleteDoc(ref()))
+  })
+
+  it('outro usuário e visitante não acessam', async () => {
+    await env.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), 'users/alice/categories/js'), validCategory))
+    await assertFails(getDoc(ref(bob())))
+    await assertFails(getDocs(collection(bob(), 'users/alice/categories')))
+    await assertFails(setDoc(ref(bob(), 'nova'), validCategory))
+    await assertFails(updateDoc(ref(bob()), { name: 'hack' }))
+    await assertFails(deleteDoc(ref(bob())))
+    await assertFails(getDoc(ref(anon())))
+  })
+
+  it.each([
+    ['nome vazio', { name: '' }],
+    ['nome longo demais', { name: 'x'.repeat(51) }],
+    ['nome numérico', { name: 1 }],
+    ['campo extra', { color: 'red' }],
+  ])('recusa %s', async (_label, patch) => {
+    await assertFails(setDoc(ref(), { ...validCategory, ...patch }))
+  })
+
+  it('recusa categoria sem data de criação', async () => {
+    await assertFails(setDoc(ref(), { name: 'JS' }))
   })
 })

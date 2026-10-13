@@ -73,4 +73,24 @@ describe('StudySession', () => {
     rerender(<StudySession dueCards={[]} onReview={onReview} onGoToCards={onGoToCards} />)
     expect(screen.getByText(/revisou 1 card nesta sessão/i)).toBeInTheDocument()
   })
+
+  it('volta para a frente se o card atual mudar sem avaliação (troca de filtro)', async () => {
+    const first = makeCard({ id: 'a', title: 'Primeiro' })
+    const second = makeCard({ id: 'b', title: 'Segundo' })
+    const { user, rerender, onReview, onGoToCards } = setup([first, second])
+
+    await user.click(screen.getByRole('button', { name: 'Mostrar resposta' }))
+    rerender(<StudySession dueCards={[second]} onReview={onReview} onGoToCards={onGoToCards} />)
+    expect(screen.getByRole('button', { name: 'Mostrar resposta' })).toBeInTheDocument()
+  })
+
+  it('com filtro ativo, oferece revisar todas as categorias', async () => {
+    const onClearFilter = vi.fn()
+    const user = userEvent.setup()
+    render(<StudySession dueCards={[]} onReview={vi.fn()} onGoToCards={vi.fn()} onClearFilter={onClearFilter} />)
+
+    expect(screen.getByText(/nenhum card dessas categorias/i)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Revisar todas as categorias' }))
+    expect(onClearFilter).toHaveBeenCalled()
+  })
 })
