@@ -336,7 +336,7 @@ textarea {
 }
 
 .chip__count {
-  margin-left: 6px;
+  margin-left: 2px;
   font-size: 0.75rem;
   opacity: 0.75;
 }
@@ -525,6 +525,14 @@ textarea {
 }
 
 /* Study */
+.study-filter {
+  margin-bottom: 20px;
+}
+
+.study-filter .chip-group {
+  justify-content: center;
+}
+
 .study {
   display: flex;
   flex-direction: column;

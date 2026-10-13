@@ -5,10 +5,18 @@ import { useCategories } from '../hooks/useCategories'
 import { useOnline } from '../hooks/useOnline'
 import { useToday } from '../hooks/useToday'
 import { isDue } from '../lib/dates'
-import { clearLegacyCards, exportCards, loadLegacyCards, readCardsFile } from '../lib/storage'
+import {
+  clearLegacyCards,
+  exportCards,
+  loadLegacyCards,
+  loadStudyFilter,
+  readCardsFile,
+  saveStudyFilter,
+} from '../lib/storage'
 import { CardForm } from './CardForm'
 import { CardList } from './CardList'
 import { CategoryManager } from './CategoryManager'
+import { CategoryPicker } from './CategoryPicker'
 import { StudySession } from './StudySession'
 import { UserMenu } from './UserMenu'
 
@@ -45,6 +53,7 @@ export function Dashboard({ user, onLogout }: Props) {
   const currentDay = useToday()
   const [tab, setTab] = useState<Tab>('study')
   const [legacyCards, setLegacyCards] = useState(loadLegacyCards)
+  const [studyFilter, setStudyFilter] = useState(() => loadStudyFilter(user.uid))
 
   const dueCards = useMemo(
     () =>
@@ -53,6 +62,31 @@ export function Dashboard({ user, onLogout }: Props) {
         .sort((a, b) => a.nextReview.localeCompare(b.nextReview)),
     [cards, currentDay],
   )
+
+  // Ignora categorias que foram excluídas (inclusive em outro aparelho).
+  const activeStudyFilter = useMemo(
+    () => studyFilter.filter((id) => categories.some((c) => c.id === id)),
+    [studyFilter, categories],
+  )
+
+  const studyCards = useMemo(
+    () =>
+      activeStudyFilter.length === 0
+        ? dueCards
+        : dueCards.filter((c) => c.categoryIds.some((id) => activeStudyFilter.includes(id))),
+    [dueCards, activeStudyFilter],
+  )
+
+  const dueByCategory = useMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const card of dueCards) for (const id of card.categoryIds) counts[id] = (counts[id] ?? 0) + 1
+    return counts
+  }, [dueCards])
+
+  function changeStudyFilter(ids: string[]) {
+    setStudyFilter(ids)
+    saveStudyFilter(user.uid, ids)
+  }
 
   async function handleImportFile(file: File) {
     try {
@@ -149,7 +183,27 @@ export function Dashboard({ user, onLogout }: Props) {
         ) : loading ? (
           <div className="spinner" aria-label="Carregando" />
         ) : tab === 'study' ? (
-          <StudySession dueCards={dueCards} onReview={reviewCard} onGoToCards={() => setTab('cards')} />
+          <>
+            {categories.length > 0 && (
+              <div className="study-filter">
+                <CategoryPicker
+                  categories={categories}
+                  selected={activeStudyFilter}
+                  onChange={changeStudyFilter}
+                  label="Revisar categorias"
+                  allLabel="Todas"
+                  counts={dueByCategory}
+                  allCount={dueCards.length}
+                />
+              </div>
+            )}
+            <StudySession
+              dueCards={studyCards}
+              onReview={reviewCard}
+              onGoToCards={() => setTab('cards')}
+              onClearFilter={studyCards.length < dueCards.length ? () => changeStudyFilter([]) : undefined}
+            />
+          </>
         ) : (
           <>
             <section className="panel">

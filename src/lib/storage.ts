@@ -54,6 +54,27 @@ export function clearLegacyCards(): void {
   }
 }
 
+const studyFilterKey = (uid: string) => `flashcards:study-categories:${uid}`
+
+/** Categorias escolhidas na aba Estudar, lembradas por usuário neste aparelho. */
+export function loadStudyFilter(uid: string): string[] {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(studyFilterKey(uid)) ?? '[]')
+    return Array.isArray(parsed) ? parsed.filter(isValidId) : []
+  } catch {
+    return []
+  }
+}
+
+export function saveStudyFilter(uid: string, ids: string[]): void {
+  try {
+    if (ids.length > 0) localStorage.setItem(studyFilterKey(uid), JSON.stringify(ids))
+    else localStorage.removeItem(studyFilterKey(uid))
+  } catch {
+    // Ignora: armazenamento indisponível.
+  }
+}
+
 export function exportCards(cards: Flashcard[]): void {
   const blob = new Blob([JSON.stringify(cards, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)

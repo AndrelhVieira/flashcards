@@ -9,10 +9,12 @@ interface Props {
   allLabel?: string
   /** Número exibido ao lado de cada categoria. */
   counts?: Record<string, number>
+  /** Número exibido ao lado do chip de "todas". */
+  allCount?: number
 }
 
 /** Seleção múltipla de categorias em chips. */
-export function CategoryPicker({ categories, selected, onChange, label, allLabel, counts }: Props) {
+export function CategoryPicker({ categories, selected, onChange, label, allLabel, counts, allCount }: Props) {
   function toggle(id: string) {
     onChange(selected.includes(id) ? selected.filter((s) => s !== id) : [...selected, id])
   }
@@ -27,6 +29,7 @@ export function CategoryPicker({ categories, selected, onChange, label, allLabel
           onClick={() => onChange([])}
         >
           {allLabel}
+          {allCount !== undefined && <> <span className="chip__count">{allCount}</span></>}
         </button>
       )}
       {categories.map((category) => {
@@ -40,7 +43,7 @@ export function CategoryPicker({ categories, selected, onChange, label, allLabel
             onClick={() => toggle(category.id)}
           >
             {category.name}
-            {counts && <span className="chip__count">{counts[category.id] ?? 0}</span>}
+            {counts && <> <span className="chip__count">{counts[category.id] ?? 0}</span></>}
           </button>
         )
       })}
