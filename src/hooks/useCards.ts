@@ -49,7 +49,8 @@ export function useCards(uid: string) {
     return onSnapshot(
       cardsRef,
       (snap) => {
-        setCards(snap.docs.map((d) => ({ ...d.data(), id: d.id })))
+        // Cards criados antes das categorias não têm `categoryIds`.
+        setCards(snap.docs.map((d) => ({ ...d.data(), categoryIds: d.data().categoryIds ?? [], id: d.id })))
         setLoading(false)
         setError(null)
       },

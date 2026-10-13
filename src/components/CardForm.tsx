@@ -9,7 +9,7 @@ interface Props {
   onCancel?: () => void
 }
 
-const EMPTY: FlashcardInput = { title: '', description: '', intervalDays: 1 }
+const EMPTY: FlashcardInput = { title: '', description: '', intervalDays: 1, categoryIds: [] }
 
 export function CardForm({ initial = EMPTY, submitLabel, onSubmit, onCancel }: Props) {
   const [title, setTitle] = useState(initial.title)
@@ -21,7 +21,7 @@ export function CardForm({ initial = EMPTY, submitLabel, onSubmit, onCancel }: P
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!canSubmit) return
-    onSubmit({ title: title.trim(), description: description.trim(), intervalDays })
+    onSubmit({ title: title.trim(), description: description.trim(), intervalDays, categoryIds: initial.categoryIds })
     if (!onCancel) {
       // Formulário de criação: limpa para o próximo card.
       setTitle('')

@@ -83,6 +83,7 @@ describe('CardList', () => {
       title: 'Closures em JS',
       description: 'Escopo léxico',
       intervalDays: 3,
+      categoryIds: [],
     })
     expect(screen.queryByRole('button', { name: 'Salvar' })).not.toBeInTheDocument()
   })

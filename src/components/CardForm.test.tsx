@@ -28,7 +28,7 @@ describe('CardForm', () => {
     await user.click(screen.getByRole('radio', { name: '7 dias' }))
     await user.click(screen.getByRole('button', { name: 'Adicionar' }))
 
-    expect(onSubmit).toHaveBeenCalledWith({ title: 'Pergunta', description: 'Resposta', intervalDays: 7 })
+    expect(onSubmit).toHaveBeenCalledWith({ title: 'Pergunta', description: 'Resposta', intervalDays: 7, categoryIds: [] })
     expect(screen.getByLabelText(/título/i)).toHaveValue('')
     expect(screen.getByLabelText(/descrição/i)).toHaveValue('')
   })
@@ -39,7 +39,7 @@ describe('CardForm', () => {
     const onSubmit = vi.fn()
     render(
       <CardForm
-        initial={{ title: 'T', description: 'D', intervalDays: 15 }}
+        initial={{ title: 'T', description: 'D', intervalDays: 15, categoryIds: [] }}
         submitLabel="Salvar"
         onSubmit={onSubmit}
         onCancel={onCancel}

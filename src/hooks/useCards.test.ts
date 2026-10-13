@@ -56,6 +56,13 @@ describe('useCards', () => {
     expect(result.current.cards).toEqual([makeCard()])
   })
 
+  it('assume lista de categorias vazia para cards antigos', () => {
+    const { result } = renderHook(() => useCards('uid-1'))
+    const { categoryIds: _omit, ...legacy } = makeCard()
+    act(() => fs.snapshotCallback!({ docs: [{ id: 'card-1', data: () => legacy }] }))
+    expect(result.current.cards[0].categoryIds).toEqual([])
+  })
+
   it('mostra erro quando a leitura é negada', () => {
     const { result } = renderHook(() => useCards('uid-1'))
     act(() => fs.snapshotError!(new Error('permission-denied')))
@@ -65,7 +72,7 @@ describe('useCards', () => {
 
   it('cria card agendado conforme o intervalo escolhido', () => {
     const { result } = renderHook(() => useCards('uid-1'))
-    act(() => result.current.addCard({ title: 'T', description: 'D', intervalDays: 5 }))
+    act(() => result.current.addCard({ title: 'T', description: 'D', intervalDays: 5, categoryIds: ['js'] }))
 
     expect(fs.setDoc).toHaveBeenCalledWith(
       { path: 'users/uid-1/cards/auto-id', id: 'auto-id' },
@@ -77,6 +84,7 @@ describe('useCards', () => {
         createdAt: new Date(2026, 9, 12, 12).toISOString(),
         lastReviewedAt: null,
         reviewCount: 0,
+        categoryIds: ['js'],
       },
     )
   })
@@ -98,10 +106,10 @@ describe('useCards', () => {
     const { result } = renderHook(() => useCards('uid-1'))
     emit([makeCard({ intervalDays: 3, nextReview: '2026-10-14' })])
 
-    act(() => result.current.updateCard('card-1', { title: 'Novo', description: 'D', intervalDays: 3 }))
+    act(() => result.current.updateCard('card-1', { title: 'Novo', description: 'D', intervalDays: 3, categoryIds: [] }))
     expect(fs.updateDoc).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ nextReview: '2026-10-14' }))
 
-    act(() => result.current.updateCard('card-1', { title: 'Novo', description: 'D', intervalDays: 30 }))
+    act(() => result.current.updateCard('card-1', { title: 'Novo', description: 'D', intervalDays: 30, categoryIds: [] }))
     expect(fs.updateDoc).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ nextReview: '2026-11-11' }))
   })
 

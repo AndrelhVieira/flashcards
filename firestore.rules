@@ -8,7 +8,7 @@ service cloud.firestore {
     // Espelha o tipo Flashcard (sem o id, que é o id do documento).
     function isValidCard(card) {
       return card.keys().hasOnly(['title', 'description', 'intervalDays', 'nextReview',
-                                  'createdAt', 'lastReviewedAt', 'reviewCount'])
+                                  'createdAt', 'lastReviewedAt', 'reviewCount', 'categoryIds'])
         && card.keys().hasAll(['title', 'description', 'intervalDays', 'nextReview',
                                'createdAt', 'lastReviewedAt', 'reviewCount'])
         && card.title is string && card.title.size() > 0 && card.title.size() <= 200
@@ -18,13 +18,28 @@ service cloud.firestore {
         && card.createdAt is string && card.createdAt.size() <= 40
         && (card.lastReviewedAt == null
             || (card.lastReviewedAt is string && card.lastReviewedAt.size() <= 40))
-        && card.reviewCount is int && card.reviewCount >= 0;
+        && card.reviewCount is int && card.reviewCount >= 0
+        // Opcional: cards criados antes das categorias não têm o campo.
+        && (!('categoryIds' in card)
+            || (card.categoryIds is list && card.categoryIds.size() <= 20));
+    }
+
+    function isValidCategory(category) {
+      return category.keys().hasOnly(['name', 'createdAt'])
+        && category.keys().hasAll(['name', 'createdAt'])
+        && category.name is string && category.name.size() > 0 && category.name.size() <= 50
+        && category.createdAt is string && category.createdAt.size() <= 40;
     }
 
     // Cada usuário só lê e escreve os próprios cards.
     match /users/{uid}/cards/{cardId} {
       allow read, delete: if isOwner(uid);
       allow create, update: if isOwner(uid) && isValidCard(request.resource.data);
+    }
+
+    match /users/{uid}/categories/{categoryId} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isValidCategory(request.resource.data);
     }
 
     match /{document=**} {

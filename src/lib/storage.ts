@@ -1,8 +1,15 @@
-import type { Flashcard } from '../types'
+import { MAX_CATEGORIES_PER_CARD, type Flashcard } from '../types'
 import { MAX_INTERVAL, today } from './dates'
 
 /** Chave usada pela versão sem login; lida apenas para migração. */
 const LEGACY_KEY = 'flashcards:v1'
+
+/** Ids aceitos pelo Firestore como nome de documento. */
+const ID_PATTERN = /^[\w-]{1,128}$/
+
+function isValidId(value: unknown): value is string {
+  return typeof value === 'string' && ID_PATTERN.test(value)
+}
 
 function normalize(value: unknown): Flashcard | null {
   if (typeof value !== 'object' || value === null) return null
@@ -11,7 +18,7 @@ function normalize(value: unknown): Flashcard | null {
   const interval = Number(c.intervalDays)
   return {
     // Ids vazios ou inválidos para o Firestore geram um novo documento.
-    id: typeof c.id === 'string' && /^[\w-]{1,128}$/.test(c.id) ? c.id : '',
+    id: isValidId(c.id) ? c.id : '',
     title: c.title.slice(0, 200),
     description: c.description.slice(0, 10_000),
     intervalDays: Number.isInteger(interval) ? Math.min(Math.max(interval, 1), MAX_INTERVAL) : 1,
@@ -19,6 +26,9 @@ function normalize(value: unknown): Flashcard | null {
     createdAt: typeof c.createdAt === 'string' ? c.createdAt.slice(0, 40) : new Date().toISOString(),
     lastReviewedAt: typeof c.lastReviewedAt === 'string' ? c.lastReviewedAt.slice(0, 40) : null,
     reviewCount: Number.isInteger(c.reviewCount) && (c.reviewCount as number) >= 0 ? (c.reviewCount as number) : 0,
+    categoryIds: Array.isArray(c.categoryIds)
+      ? [...new Set(c.categoryIds.filter(isValidId))].slice(0, MAX_CATEGORIES_PER_CARD)
+      : [],
   }
 }
 
