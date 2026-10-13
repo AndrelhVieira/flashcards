@@ -329,7 +329,88 @@ textarea {
   color: #fff;
 }
 
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip__count {
+  margin-left: 6px;
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.field__error {
+  margin-top: 6px;
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
+/* Categorias */
+.categories__summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
+.categories[open] .categories__summary {
+  margin-bottom: 16px;
+}
+
+.categories__add {
+  display: flex;
+  gap: 8px;
+}
+
+.categories__add .search {
+  flex: 1;
+  min-width: 0;
+}
+
+.categories__empty {
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+
+.categories__list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.categories__item {
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.categories__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.categories__name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.categories__count {
+  font-size: 0.85rem;
+}
+
 /* Card list */
+.card-list .chip-group {
+  margin-top: 12px;
+}
+
 .card-list ul {
   list-style: none;
   padding: 0;
@@ -386,6 +467,23 @@ textarea {
   flex-direction: column;
   gap: 6px;
   flex-shrink: 0;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tag {
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .badge {

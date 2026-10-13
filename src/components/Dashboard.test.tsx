@@ -4,15 +4,35 @@ import type { User } from 'firebase/auth'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { makeCard } from '../test/fixtures'
 import type { useCards } from '../hooks/useCards'
+import type { useCategories } from '../hooks/useCategories'
 
 type CardsState = ReturnType<typeof useCards>
+type CategoriesState = ReturnType<typeof useCategories>
 
-const state = vi.hoisted(() => ({ current: null as unknown as CardsState }))
+const state = vi.hoisted(() => ({
+  current: null as unknown as CardsState,
+  categories: null as unknown as CategoriesState,
+}))
 vi.mock('../hooks/useCards', () => ({ useCards: () => state.current }))
+vi.mock('../hooks/useCategories', () => ({ useCategories: () => state.categories }))
 
 const { Dashboard } = await import('./Dashboard')
 
 const user = { uid: 'u1', displayName: 'Ana', email: 'ana@example.com', photoURL: null } as unknown as User
+
+function mockCategories(overrides: Partial<CategoriesState> = {}) {
+  state.categories = {
+    categories: [],
+    syncError: null,
+    dismissSyncError: vi.fn(),
+    addCategory: vi.fn(() => 'new-id'),
+    renameCategory: vi.fn(),
+    deleteCategory: vi.fn(),
+    importCategories: vi.fn(),
+    ...overrides,
+  }
+  return state.categories
+}
 
 function mockCards(overrides: Partial<CardsState> = {}) {
   state.current = {
@@ -37,6 +57,7 @@ describe('Dashboard', () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date(2026, 9, 12, 12))
     Element.prototype.scrollIntoView = vi.fn()
+    mockCategories()
   })
 
   afterEach(() => {

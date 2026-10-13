@@ -2,18 +2,27 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CardList } from './CardList'
-import { makeCard } from '../test/fixtures'
+import { makeCard, makeCategory } from '../test/fixtures'
+
+const categories = [makeCategory({ id: 'js', name: 'JavaScript' }), makeCategory({ id: 'react', name: 'React' })]
 
 const cards = [
-  makeCard({ id: 'b', title: 'React hooks', description: 'useState e useEffect', nextReview: '2026-10-20' }),
-  makeCard({ id: 'a', title: 'Closure', description: 'Escopo léxico', nextReview: '2026-10-10' }),
+  makeCard({
+    id: 'b',
+    title: 'React hooks',
+    description: 'useState e useEffect',
+    nextReview: '2026-10-20',
+    categoryIds: ['react', 'js'],
+  }),
+  makeCard({ id: 'a', title: 'Closure', description: 'Escopo léxico', nextReview: '2026-10-10', categoryIds: ['js'] }),
+  makeCard({ id: 'c', title: 'SQL join', description: 'Junção de tabelas', nextReview: '2026-10-25' }),
 ]
 
 function setup() {
   const props = { onUpdate: vi.fn(), onDelete: vi.fn(), onStudyNow: vi.fn() }
   // Timers falsos só para a data; o userEvent precisa avançar o tempo junto.
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-  render(<CardList cards={cards} {...props} />)
+  render(<CardList cards={cards} categories={categories} {...props} />)
   return { user, ...props }
 }
 
@@ -26,14 +35,14 @@ describe('CardList', () => {
   afterEach(() => vi.useRealTimers())
 
   it('mostra mensagem quando não há cards', () => {
-    render(<CardList cards={[]} onUpdate={vi.fn()} onDelete={vi.fn()} onStudyNow={vi.fn()} />)
+    render(<CardList cards={[]} categories={[]} onUpdate={vi.fn()} onDelete={vi.fn()} onStudyNow={vi.fn()} />)
     expect(screen.getByText(/nenhum card ainda/i)).toBeInTheDocument()
   })
 
   it('ordena pela próxima revisão e indica atrasos', () => {
     setup()
     const titles = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)
-    expect(titles).toEqual(['Closure', 'React hooks'])
+    expect(titles).toEqual(['Closure', 'React hooks', 'SQL join'])
     expect(screen.getByText('Revisão atrasado há 2 dias')).toBeInTheDocument()
     expect(screen.getByText('Revisão em 8 dias')).toBeInTheDocument()
   })
@@ -51,7 +60,7 @@ describe('CardList', () => {
   it('só oferece "Revisar hoje" para cards que ainda não venceram', async () => {
     const { user, onStudyNow } = setup()
     const buttons = screen.getAllByRole('button', { name: 'Revisar hoje' })
-    expect(buttons).toHaveLength(1)
+    expect(buttons).toHaveLength(2)
     await user.click(buttons[0])
     expect(onStudyNow).toHaveBeenCalledWith('b')
   })
@@ -83,8 +92,30 @@ describe('CardList', () => {
       title: 'Closures em JS',
       description: 'Escopo léxico',
       intervalDays: 3,
-      categoryIds: [],
+      categoryIds: ['js'],
     })
     expect(screen.queryByRole('button', { name: 'Salvar' })).not.toBeInTheDocument()
+  })
+
+  it('mostra as categorias de cada card', () => {
+    setup()
+    const item = screen.getByRole('heading', { name: 'React hooks' }).closest('li')!
+    expect(within(item).getByText('React')).toBeInTheDocument()
+    expect(within(item).getByText('JavaScript')).toBeInTheDocument()
+  })
+
+  it('filtra por categorias, combinando com OU', async () => {
+    const { user } = setup()
+    const filter = screen.getByRole('group', { name: 'Filtrar por categoria' })
+    const titles = () => screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)
+
+    await user.click(within(filter).getByRole('button', { name: 'React' }))
+    expect(titles()).toEqual(['React hooks'])
+
+    await user.click(within(filter).getByRole('button', { name: 'JavaScript' }))
+    expect(titles()).toEqual(['Closure', 'React hooks'])
+
+    await user.click(within(filter).getByRole('button', { name: 'Todas' }))
+    expect(titles()).toHaveLength(3)
   })
 })

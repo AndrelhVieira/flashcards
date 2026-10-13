@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
 import type { User } from 'firebase/auth'
 import { useCards } from '../hooks/useCards'
+import { useCategories } from '../hooks/useCategories'
 import { useOnline } from '../hooks/useOnline'
 import { useToday } from '../hooks/useToday'
 import { isDue } from '../lib/dates'
 import { clearLegacyCards, exportCards, loadLegacyCards, readCardsFile } from '../lib/storage'
 import { CardForm } from './CardForm'
 import { CardList } from './CardList'
+import { CategoryManager } from './CategoryManager'
 import { StudySession } from './StudySession'
 import { UserMenu } from './UserMenu'
 
@@ -31,6 +33,14 @@ export function Dashboard({ user, onLogout }: Props) {
     studyNow,
     importCards,
   } = useCards(user.uid)
+  const {
+    categories,
+    syncError: categorySyncError,
+    dismissSyncError: dismissCategorySyncError,
+    addCategory,
+    renameCategory,
+    deleteCategory,
+  } = useCategories(user.uid)
   const online = useOnline()
   const currentDay = useToday()
   const [tab, setTab] = useState<Tab>('study')
@@ -95,10 +105,16 @@ export function Dashboard({ user, onLogout }: Props) {
         </div>
       )}
 
-      {syncError && (
+      {(syncError || categorySyncError) && (
         <div className="banner banner--error" role="alert">
-          <p>{syncError}</p>
-          <button className="btn btn--small btn--ghost" onClick={dismissSyncError}>
+          <p>{syncError ?? categorySyncError}</p>
+          <button
+            className="btn btn--small btn--ghost"
+            onClick={() => {
+              dismissSyncError()
+              dismissCategorySyncError()
+            }}
+          >
             Fechar
           </button>
         </div>
@@ -138,9 +154,22 @@ export function Dashboard({ user, onLogout }: Props) {
           <>
             <section className="panel">
               <h2 className="panel__title">Novo flashcard</h2>
-              <CardForm submitLabel="Adicionar card" onSubmit={addCard} />
+              <CardForm categories={categories} submitLabel="Adicionar card" onSubmit={addCard} />
             </section>
-            <CardList cards={cards} onUpdate={updateCard} onDelete={deleteCard} onStudyNow={studyNow} />
+            <CategoryManager
+              categories={categories}
+              cards={cards}
+              onAdd={addCategory}
+              onRename={renameCategory}
+              onDelete={(id) => deleteCategory(id, cards)}
+            />
+            <CardList
+              cards={cards}
+              categories={categories}
+              onUpdate={updateCard}
+              onDelete={deleteCard}
+              onStudyNow={studyNow}
+            />
           </>
         )}
       </main>

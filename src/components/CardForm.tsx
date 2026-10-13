@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react'
-import type { FlashcardInput } from '../types'
+import type { Category, FlashcardInput } from '../types'
+import { CategoryPicker } from './CategoryPicker'
 import { IntervalPicker } from './IntervalPicker'
 
 interface Props {
   initial?: FlashcardInput
+  categories: Category[]
   submitLabel: string
   onSubmit: (input: FlashcardInput) => void
   onCancel?: () => void
@@ -11,17 +13,24 @@ interface Props {
 
 const EMPTY: FlashcardInput = { title: '', description: '', intervalDays: 1, categoryIds: [] }
 
-export function CardForm({ initial = EMPTY, submitLabel, onSubmit, onCancel }: Props) {
+export function CardForm({ initial = EMPTY, categories, submitLabel, onSubmit, onCancel }: Props) {
   const [title, setTitle] = useState(initial.title)
   const [description, setDescription] = useState(initial.description)
   const [intervalDays, setIntervalDays] = useState(initial.intervalDays)
+  const [categoryIds, setCategoryIds] = useState(initial.categoryIds)
 
   const canSubmit = title.trim() !== '' && description.trim() !== ''
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!canSubmit) return
-    onSubmit({ title: title.trim(), description: description.trim(), intervalDays, categoryIds: initial.categoryIds })
+    onSubmit({
+      title: title.trim(),
+      description: description.trim(),
+      intervalDays,
+      // Descarta categorias excluídas enquanto o formulário estava aberto.
+      categoryIds: categoryIds.filter((id) => categories.some((c) => c.id === id)),
+    })
     if (!onCancel) {
       // Formulário de criação: limpa para o próximo card.
       setTitle('')
@@ -59,6 +68,13 @@ export function CardForm({ initial = EMPTY, submitLabel, onSubmit, onCancel }: P
         <span className="field__label">Revisar em</span>
         <IntervalPicker value={intervalDays} onChange={setIntervalDays} label="Revisar em" />
       </div>
+
+      {categories.length > 0 && (
+        <div className="field">
+          <span className="field__label">Categorias</span>
+          <CategoryPicker categories={categories} selected={categoryIds} onChange={setCategoryIds} label="Categorias" />
+        </div>
+      )}
 
       <div className="form-actions">
         {onCancel && (
