@@ -7,10 +7,10 @@ import { useToday } from '../hooks/useToday'
 import { isDue } from '../lib/dates'
 import {
   clearLegacyCards,
-  exportCards,
+  exportBackup,
   loadLegacyCards,
   loadStudyFilter,
-  readCardsFile,
+  readBackupFile,
   saveStudyFilter,
 } from '../lib/storage'
 import { CardForm } from './CardForm'
@@ -48,6 +48,7 @@ export function Dashboard({ user, onLogout }: Props) {
     addCategory,
     renameCategory,
     deleteCategory,
+    importCategories,
   } = useCategories(user.uid)
   const online = useOnline()
   const currentDay = useToday()
@@ -90,9 +91,15 @@ export function Dashboard({ user, onLogout }: Props) {
 
   async function handleImportFile(file: File) {
     try {
-      const imported = await readCardsFile(file)
-      if (confirm(`Importar ${imported.length} cards para sua conta? Cards com o mesmo id serão atualizados.`)) {
-        importCards(imported)
+      const backup = await readBackupFile(file)
+      const withCategories = backup.categories.length > 0 ? ` e ${backup.categories.length} categorias` : ''
+      if (
+        confirm(
+          `Importar ${backup.cards.length} cards${withCategories} para sua conta? Itens com o mesmo id serão atualizados.`,
+        )
+      ) {
+        importCategories(backup.categories)
+        importCards(backup.cards)
       }
     } catch {
       alert('Arquivo inválido. Use um backup exportado por este app.')
@@ -116,7 +123,7 @@ export function Dashboard({ user, onLogout }: Props) {
         <UserMenu
           user={user}
           canExport={cards.length > 0}
-          onExport={() => exportCards(cards)}
+          onExport={() => exportBackup(cards, categories)}
           onImportFile={handleImportFile}
           onLogout={onLogout}
         />

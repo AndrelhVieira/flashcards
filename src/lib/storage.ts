@@ -1,4 +1,4 @@
-import { MAX_CATEGORIES_PER_CARD, type Flashcard } from '../types'
+import { MAX_CATEGORIES_PER_CARD, MAX_CATEGORY_NAME, type Category, type Flashcard } from '../types'
 import { MAX_INTERVAL, today } from './dates'
 
 /** Chave usada pela versão sem login; lida apenas para migração. */
@@ -35,6 +35,36 @@ function normalize(value: unknown): Flashcard | null {
 export function parseCards(raw: unknown): Flashcard[] {
   if (!Array.isArray(raw)) throw new Error('Formato inválido: esperado uma lista de cards.')
   return raw.map(normalize).filter((c): c is Flashcard => c !== null)
+}
+
+function normalizeCategory(value: unknown): Category | null {
+  if (typeof value !== 'object' || value === null) return null
+  const c = value as Record<string, unknown>
+  // O id é obrigatório: é ele que liga a categoria aos cards.
+  if (!isValidId(c.id) || typeof c.name !== 'string' || !c.name.trim()) return null
+  return {
+    id: c.id,
+    name: c.name.trim().slice(0, MAX_CATEGORY_NAME),
+    createdAt: typeof c.createdAt === 'string' ? c.createdAt.slice(0, 40) : new Date().toISOString(),
+  }
+}
+
+export interface Backup {
+  cards: Flashcard[]
+  categories: Category[]
+}
+
+/** Aceita o backup atual ({ cards, categories }) e o antigo (só a lista de cards). */
+export function parseBackup(raw: unknown): Backup {
+  if (Array.isArray(raw)) return { cards: parseCards(raw), categories: [] }
+  if (typeof raw !== 'object' || raw === null) throw new Error('Formato inválido.')
+  const { cards, categories } = raw as Record<string, unknown>
+  return {
+    cards: parseCards(cards),
+    categories: Array.isArray(categories)
+      ? categories.map(normalizeCategory).filter((c): c is Category => c !== null)
+      : [],
+  }
 }
 
 export function loadLegacyCards(): Flashcard[] {
@@ -75,8 +105,9 @@ export function saveStudyFilter(uid: string, ids: string[]): void {
   }
 }
 
-export function exportCards(cards: Flashcard[]): void {
-  const blob = new Blob([JSON.stringify(cards, null, 2)], { type: 'application/json' })
+export function exportBackup(cards: Flashcard[], categories: Category[]): void {
+  const backup = { version: 2, categories, cards }
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -85,6 +116,6 @@ export function exportCards(cards: Flashcard[]): void {
   URL.revokeObjectURL(url)
 }
 
-export async function readCardsFile(file: File): Promise<Flashcard[]> {
-  return parseCards(JSON.parse(await file.text()))
+export async function readBackupFile(file: File): Promise<Backup> {
+  return parseBackup(JSON.parse(await file.text()))
 }
