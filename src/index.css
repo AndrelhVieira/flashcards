@@ -825,6 +825,11 @@ code {
   font-size: 1.75rem;
 }
 
+.login__about {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .login__error {
   color: var(--danger);
   font-size: 0.9rem;
