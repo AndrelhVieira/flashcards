@@ -5,6 +5,8 @@ import { INTERVALS } from '../lib/dates'
 import { DemoDeck } from './DemoDeck'
 import { useSession } from './useSession'
 
+const PORTFOLIO_URL = 'https://www.andreluizv.dev.br'
+
 export function Landing() {
   const { signedIn, error, enter } = useSession()
   const { t } = useI18n()
@@ -131,7 +133,12 @@ export function Landing() {
       </main>
 
       <footer className="footer">
-        <span>{l.footer}</span>
+        <span>
+          {l.footer}
+          <a href={PORTFOLIO_URL} target="_blank" rel="noopener" title={l.portfolio}>
+            André Vieira
+          </a>
+        </span>
       </footer>
     </>
   )

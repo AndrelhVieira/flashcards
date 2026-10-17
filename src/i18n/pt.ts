@@ -202,7 +202,8 @@ export const pt = {
       title: 'Seu próximo card leva dez segundos.',
       signIn: 'Entrar com Google',
     },
-    footer: 'Flashcards · projeto pessoal de André Vieira',
+    footer: 'Flashcards · projeto pessoal de ',
+    portfolio: 'Ver o portfólio de André Vieira',
   },
   demo: {
     label: 'Demonstração interativa',
