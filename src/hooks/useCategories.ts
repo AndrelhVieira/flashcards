@@ -12,20 +12,22 @@ import {
 } from 'firebase/firestore'
 import type { Category, Flashcard } from '../types'
 import { db } from '../lib/firebase'
+import { useI18n } from '../i18n/context'
 
 type CategoryData = Omit<Category, 'id'>
 
 const BATCH_LIMIT = 450
 
 export function useCategories(uid: string) {
+  const { t } = useI18n()
   const [categories, setCategories] = useState<Category[]>([])
-  const [syncError, setSyncError] = useState<string | null>(null)
+  const [syncFailed, setSyncFailed] = useState(false)
 
   // Mesma estratégia do useCards: a UI reflete o snapshot local, erros só são avisados.
   const fireAndForget = useCallback((promise: Promise<unknown>) => {
     promise.catch((err) => {
       console.error('Falha ao sincronizar categoria', err)
-      setSyncError('Não foi possível salvar uma alteração nas categorias. Tente novamente.')
+      setSyncFailed(true)
     })
   }, [])
 
@@ -95,7 +97,8 @@ export function useCategories(uid: string) {
     [categoriesRef, fireAndForget],
   )
 
-  const dismissSyncError = useCallback(() => setSyncError(null), [])
+  const dismissSyncError = useCallback(() => setSyncFailed(false), [])
+  const syncError = syncFailed ? t.sync.categoriesSave : null
 
   return { categories, syncError, dismissSyncError, addCategory, renameCategory, deleteCategory, importCategories }
 }

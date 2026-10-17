@@ -4,6 +4,7 @@ import { useCards } from '../hooks/useCards'
 import { useCategories } from '../hooks/useCategories'
 import { useOnline } from '../hooks/useOnline'
 import { useToday } from '../hooks/useToday'
+import { useI18n } from '../i18n/context'
 import { isDue } from '../lib/dates'
 import {
   clearLegacyCards,
@@ -50,6 +51,7 @@ export function Dashboard({ user, onLogout }: Props) {
     deleteCategory,
     importCategories,
   } = useCategories(user.uid)
+  const { t } = useI18n()
   const online = useOnline()
   const currentDay = useToday()
   const [tab, setTab] = useState<Tab>('study')
@@ -92,17 +94,12 @@ export function Dashboard({ user, onLogout }: Props) {
   async function handleImportFile(file: File) {
     try {
       const backup = await readBackupFile(file)
-      const withCategories = backup.categories.length > 0 ? ` e ${backup.categories.length} categorias` : ''
-      if (
-        confirm(
-          `Importar ${backup.cards.length} cards${withCategories} para sua conta? Itens com o mesmo id serão atualizados.`,
-        )
-      ) {
+      if (confirm(t.dashboard.importConfirm(backup.cards.length, backup.categories.length))) {
         importCategories(backup.categories)
         importCards(backup.cards)
       }
     } catch {
-      alert('Arquivo inválido. Use um backup exportado por este app.')
+      alert(t.dashboard.invalidBackup)
     }
   }
 
@@ -118,7 +115,7 @@ export function Dashboard({ user, onLogout }: Props) {
         <div className="brand">
           <img src="/icon.svg" alt="" width={30} height={30} />
           <span>Flashcards</span>
-          {!online && <span className="badge badge--offline">Offline</span>}
+          {!online && <span className="badge badge--offline">{t.dashboard.offline}</span>}
         </div>
         <UserMenu
           user={user}
@@ -131,16 +128,13 @@ export function Dashboard({ user, onLogout }: Props) {
 
       {legacyCards.length > 0 && (
         <div className="banner" role="status">
-          <p>
-            Encontramos {legacyCards.length} {legacyCards.length === 1 ? 'card salvo' : 'cards salvos'} neste
-            navegador. Deseja enviá-los para sua conta?
-          </p>
+          <p>{t.dashboard.legacy(legacyCards.length)}</p>
           <div className="banner__actions">
             <button className="btn btn--small btn--ghost" onClick={() => migrateLegacy(false)}>
-              Descartar
+              {t.dashboard.discard}
             </button>
             <button className="btn btn--small btn--primary" onClick={() => migrateLegacy(true)}>
-              Importar
+              {t.dashboard.import}
             </button>
           </div>
         </div>
@@ -156,7 +150,7 @@ export function Dashboard({ user, onLogout }: Props) {
               dismissCategorySyncError()
             }}
           >
-            Fechar
+            {t.dashboard.close}
           </button>
         </div>
       )}
@@ -168,7 +162,7 @@ export function Dashboard({ user, onLogout }: Props) {
           className={`tab${tab === 'study' ? ' tab--active' : ''}`}
           onClick={() => setTab('study')}
         >
-          Estudar
+          {t.dashboard.tabStudy}
           {dueCards.length > 0 && <span className="tab__count">{dueCards.length}</span>}
         </button>
         <button
@@ -177,7 +171,7 @@ export function Dashboard({ user, onLogout }: Props) {
           className={`tab${tab === 'cards' ? ' tab--active' : ''}`}
           onClick={() => setTab('cards')}
         >
-          Meus cards
+          {t.dashboard.tabCards}
           <span className="tab__count tab__count--muted">{cards.length}</span>
         </button>
       </nav>
@@ -188,7 +182,7 @@ export function Dashboard({ user, onLogout }: Props) {
             {error}
           </p>
         ) : loading ? (
-          <div className="spinner" aria-label="Carregando" />
+          <div className="spinner" aria-label={t.common.loading} />
         ) : tab === 'study' ? (
           <>
             {categories.length > 0 && (
@@ -197,8 +191,8 @@ export function Dashboard({ user, onLogout }: Props) {
                   categories={categories}
                   selected={activeStudyFilter}
                   onChange={changeStudyFilter}
-                  label="Revisar categorias"
-                  allLabel="Todas"
+                  label={t.dashboard.studyFilter}
+                  allLabel={t.common.all}
                   counts={dueByCategory}
                   allCount={dueCards.length}
                 />
@@ -214,8 +208,8 @@ export function Dashboard({ user, onLogout }: Props) {
         ) : (
           <>
             <section className="panel">
-              <h2 className="panel__title">Novo flashcard</h2>
-              <CardForm categories={categories} submitLabel="Adicionar card" onSubmit={addCard} />
+              <h2 className="panel__title">{t.dashboard.newCard}</h2>
+              <CardForm categories={categories} submitLabel={t.dashboard.addCard} onSubmit={addCard} />
             </section>
             <CategoryManager
               categories={categories}

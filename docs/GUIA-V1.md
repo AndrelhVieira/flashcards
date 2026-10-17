@@ -108,8 +108,9 @@ npx firebase-tools deploy --only firestore:rules --project <project-id>
    npm run dev
    ```
 4. Abra http://localhost:5173 e valide:
-   - [ ] Aparece a tela **Entrar com Google** (e não "Configuração pendente")
-   - [ ] O login funciona e mostra seu avatar no canto superior direito
+   - [ ] **Entrar com Google** na landing abre o popup e leva ao app em `/app/` (e não a "Configuração pendente")
+   - [ ] O app mostra seu avatar no canto superior direito
+   - [ ] Sem sessão (aba anônima), abrir `/app/` volta para a landing
    - [ ] Criar um card → ele aparece em **Meus cards**
    - [ ] No console Firebase → Firestore → **Dados**, existe `users/<seu-uid>/cards/<id>`
    - [ ] Abrir o app em outra aba: o card criado aparece lá também (sincronização)

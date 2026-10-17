@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Category, Flashcard, FlashcardInput } from '../types'
-import { describeReview, formatDays, isDue } from '../lib/dates'
+import { daysUntil, isDue } from '../lib/dates'
+import { useI18n } from '../i18n/context'
 import { CardForm } from './CardForm'
 import { CategoryPicker } from './CategoryPicker'
 
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function CardList({ cards, categories, onUpdate, onDelete, onStudyNow }: Props) {
+  const { t } = useI18n()
   const [query, setQuery] = useState('')
   const [filterIds, setFilterIds] = useState<string[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -32,7 +34,7 @@ export function CardList({ cards, categories, onUpdate, onDelete, onStudyNow }: 
   }, [cards, query, activeFilter])
 
   if (cards.length === 0) {
-    return <p className="muted center">Nenhum card ainda. Crie o primeiro acima!</p>
+    return <p className="muted center">{t.list.empty}</p>
   }
 
   return (
@@ -40,10 +42,10 @@ export function CardList({ cards, categories, onUpdate, onDelete, onStudyNow }: 
       <input
         type="search"
         className="search"
-        placeholder={`Buscar em ${cards.length} cards…`}
+        placeholder={t.list.search(cards.length)}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        aria-label="Buscar cards"
+        aria-label={t.list.searchLabel}
       />
 
       {categories.length > 0 && (
@@ -51,12 +53,12 @@ export function CardList({ cards, categories, onUpdate, onDelete, onStudyNow }: 
           categories={categories}
           selected={activeFilter}
           onChange={setFilterIds}
-          label="Filtrar por categoria"
-          allLabel="Todas"
+          label={t.list.filter}
+          allLabel={t.common.all}
         />
       )}
 
-      {filtered.length === 0 && <p className="muted center">Nenhum card encontrado.</p>}
+      {filtered.length === 0 && <p className="muted center">{t.list.notFound}</p>}
 
       <ul>
         {filtered.map((card) =>
@@ -65,7 +67,7 @@ export function CardList({ cards, categories, onUpdate, onDelete, onStudyNow }: 
               <CardForm
                 initial={card}
                 categories={categories}
-                submitLabel="Salvar"
+                submitLabel={t.common.save}
                 onSubmit={(input) => {
                   onUpdate(card.id, input)
                   setEditingId(null)
@@ -79,7 +81,7 @@ export function CardList({ cards, categories, onUpdate, onDelete, onStudyNow }: 
                 <h3>{card.title}</h3>
                 <p>{card.description}</p>
                 {card.categoryIds.some((id) => categoryNames.has(id)) && (
-                  <div className="tag-list" aria-label="Categorias">
+                  <div className="tag-list" aria-label={t.common.categories}>
                     {card.categoryIds
                       .filter((id) => categoryNames.has(id))
                       .map((id) => (
@@ -91,30 +93,27 @@ export function CardList({ cards, categories, onUpdate, onDelete, onStudyNow }: 
                 )}
                 <div className="card-item__meta">
                   <span className={`badge${isDue(card.nextReview) ? ' badge--due' : ''}`}>
-                    Revisão {describeReview(card.nextReview)}
+                    {t.list.review(t.reviewWhen(daysUntil(card.nextReview)))}
                   </span>
-                  <span className="muted">
-                    Intervalo: {formatDays(card.intervalDays)} · {card.reviewCount}{' '}
-                    {card.reviewCount === 1 ? 'revisão' : 'revisões'}
-                  </span>
+                  <span className="muted">{t.list.interval(card.intervalDays, card.reviewCount)}</span>
                 </div>
               </div>
               <div className="card-item__actions">
                 {!isDue(card.nextReview) && (
                   <button className="btn btn--small btn--ghost" onClick={() => onStudyNow(card.id)}>
-                    Revisar hoje
+                    {t.list.studyNow}
                   </button>
                 )}
                 <button className="btn btn--small btn--ghost" onClick={() => setEditingId(card.id)}>
-                  Editar
+                  {t.list.edit}
                 </button>
                 <button
                   className="btn btn--small btn--ghost btn--danger-text"
                   onClick={() => {
-                    if (confirm(`Excluir o card "${card.title}"?`)) onDelete(card.id)
+                    if (confirm(t.list.confirmDelete(card.title))) onDelete(card.id)
                   }}
                 >
-                  Excluir
+                  {t.common.delete}
                 </button>
               </div>
             </li>

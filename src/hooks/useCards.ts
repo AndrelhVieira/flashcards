@@ -12,6 +12,7 @@ import {
 import type { Flashcard, FlashcardInput } from '../types'
 import { addDays, today } from '../lib/dates'
 import { db } from '../lib/firebase'
+import { useI18n } from '../i18n/context'
 
 type CardData = Omit<Flashcard, 'id'>
 
@@ -22,10 +23,12 @@ function toData({ id: _id, ...data }: Flashcard): CardData {
 }
 
 export function useCards(uid: string) {
+  const { t } = useI18n()
   const [cards, setCards] = useState<Flashcard[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [syncError, setSyncError] = useState<string | null>(null)
+  // Guardam só se houve falha: o texto sai no idioma atual, mesmo se ele mudar depois.
+  const [loadFailed, setLoadFailed] = useState(false)
+  const [syncFailed, setSyncFailed] = useState(false)
 
   /**
    * Escritas não são aguardadas: com o cache offline do Firestore a promise só
@@ -35,7 +38,7 @@ export function useCards(uid: string) {
   const fireAndForget = useCallback((promise: Promise<unknown>) => {
     promise.catch((err) => {
       console.error('Falha ao sincronizar card', err)
-      setSyncError('Não foi possível salvar uma alteração. Verifique os dados e tente novamente.')
+      setSyncFailed(true)
     })
   }, [])
 
@@ -52,11 +55,11 @@ export function useCards(uid: string) {
         // Cards criados antes das categorias não têm `categoryIds`.
         setCards(snap.docs.map((d) => ({ ...d.data(), categoryIds: d.data().categoryIds ?? [], id: d.id })))
         setLoading(false)
-        setError(null)
+        setLoadFailed(false)
       },
       (err) => {
         console.error(err)
-        setError('Não foi possível carregar seus cards.')
+        setLoadFailed(true)
         setLoading(false)
       },
     )
@@ -129,7 +132,9 @@ export function useCards(uid: string) {
     [cardsRef, fireAndForget],
   )
 
-  const dismissSyncError = useCallback(() => setSyncError(null), [])
+  const dismissSyncError = useCallback(() => setSyncFailed(false), [])
+  const error = loadFailed ? t.sync.cardsLoad : null
+  const syncError = syncFailed ? t.sync.cardsSave : null
 
   return { cards, loading, error, syncError, dismissSyncError, addCard, updateCard, deleteCard, reviewCard, studyNow, importCards }
 }

@@ -14,6 +14,8 @@ React + TypeScript + Vite, com Firebase (Auth + Firestore) como backend.
   - ou qualquer intervalo manualmente
 - **Meus cards**: buscar, filtrar por categoria, editar, excluir ou antecipar a revisão.
 - **Categorias**: crie categorias personalizadas e coloque cada card em quantas quiser. Na aba Estudar, escolha uma ou mais categorias para revisar só os cards vencidos delas (a escolha fica salva no aparelho).
+- **Landing page** (`/`): página inicial com uma demonstração interativa e o login com Google. O app em si fica em `/app/` e só abre com sessão ativa (sem login, volta para `/`). A landing é uma entrada separada do Vite: o Firestore nunca é carregado nela e o Firebase Auth é baixado sob demanda. Aberta como app instalado e com sessão, vai direto para `/app/`.
+- **Idiomas**: português (padrão) e inglês, trocados pelo menu do avatar no app ou pelo botão no topo da landing. A escolha fica salva no aparelho e vale para as duas páginas.
 - **Backup**: exportar/importar JSON (cards e categorias) pelo menu do avatar; backups antigos, só com cards, continuam aceitos. Cards da versão antiga (localStorage) são oferecidos para importação no primeiro login.
 
 ## Configuração do Firebase (uma vez)
@@ -40,7 +42,7 @@ React + TypeScript + Vite, com Firebase (Auth + Firestore) como backend.
 
 ```bash
 npm install
-npm run dev          # http://localhost:5173
+npm run dev          # http://localhost:5173 (landing) e /app/ (app)
 npm run build && npm run preview   # testar PWA/service worker
 ```
 
@@ -73,14 +75,19 @@ O GitHub Actions (`.github/workflows/ci.yml`) roda tudo isso a cada push e pull 
 
 ```
 src/
-  lib/firebase.ts      inicialização do Firebase (Auth + Firestore com cache offline)
+  i18n/                textos em pt.ts (padrão) e en.ts (mesmo formato, checado pelo TypeScript), provider e troca de idioma
+  lib/auth.ts          inicialização do Firebase e do Auth (também usado pela landing)
+  lib/firebase.ts      Firestore com cache offline
   lib/dates.ts         intervalos e cálculo de datas
   lib/storage.ts       import/export JSON e migração do localStorage
-  hooks/useAuth.ts     login/logout com Google
+  landing/             landing page (/): Landing, DemoDeck, login (useSession) e estilos próprios
+  hooks/useAuth.ts     sessão e logout no app
   hooks/useCards.ts    CRUD + sincronização em tempo real dos cards
   hooks/useCategories.ts  CRUD das categorias (excluir remove a categoria dos cards)
-  components/          LoginScreen, Dashboard, StudySession, CardForm, CardList, UserMenu,
+  components/          Dashboard, StudySession, CardForm, CardList, UserMenu,
                        CategoryManager, CategoryPicker
+index.html             HTML da landing page
+app/index.html         HTML do app
 tests/                 testes das regras do Firestore (emulador)
 firestore.rules        regras de segurança (por usuário)
 vercel.json            headers de segurança e cache

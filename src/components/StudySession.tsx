@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Flashcard } from '../types'
-import { formatDays, nextInterval } from '../lib/dates'
+import { nextInterval } from '../lib/dates'
+import { useI18n } from '../i18n/context'
 import { IntervalPicker } from './IntervalPicker'
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function StudySession({ dueCards, onReview, onGoToCards, onClearFilter }: Props) {
+  const { t } = useI18n()
   // Guarda o id do card virado: se o card atual mudar (ex.: troca de filtro), volta para a frente.
   const [revealedId, setRevealedId] = useState<string | null>(null)
   const [reviewedCount, setReviewedCount] = useState(0)
@@ -42,21 +44,21 @@ export function StudySession({ dueCards, onReview, onGoToCards, onClearFilter }:
     return (
       <section className="empty">
         <div className="empty__icon" aria-hidden>🎉</div>
-        <h2>{onClearFilter ? 'Categorias em dia!' : 'Tudo em dia!'}</h2>
+        <h2>{onClearFilter ? t.study.doneFiltered : t.study.done}</h2>
         <p>
           {reviewedCount > 0
-            ? `Você revisou ${reviewedCount} ${reviewedCount === 1 ? 'card' : 'cards'} nesta sessão.`
+            ? t.study.reviewed(reviewedCount)
             : onClearFilter
-              ? 'Nenhum card dessas categorias para revisar hoje.'
-              : 'Nenhum card para revisar hoje.'}
+              ? t.study.noneFiltered
+              : t.study.none}
         </p>
         {onClearFilter ? (
           <button className="btn btn--primary" onClick={onClearFilter}>
-            Revisar todas as categorias
+            {t.study.reviewAll}
           </button>
         ) : (
           <button className="btn btn--primary" onClick={onGoToCards}>
-            Gerenciar cards
+            {t.study.manage}
           </button>
         )}
       </section>
@@ -74,7 +76,7 @@ export function StudySession({ dueCards, onReview, onGoToCards, onClearFilter }:
   return (
     <section className="study">
       <p className="study__progress">
-        {dueCards.length} {dueCards.length === 1 ? 'card restante' : 'cards restantes'}
+        {t.study.remaining(dueCards.length)}
       </p>
 
       <button
@@ -82,16 +84,16 @@ export function StudySession({ dueCards, onReview, onGoToCards, onClearFilter }:
         type="button"
         className={`flashcard${revealed ? ' flashcard--revealed' : ''}`}
         onClick={() => setRevealedId(revealed ? null : card.id)}
-        aria-label={revealed ? 'Mostrar frente' : 'Mostrar resposta'}
+        aria-label={revealed ? t.study.showFront : t.study.showAnswer}
       >
         <div className="flashcard__inner">
           <div className="flashcard__face flashcard__front">
-            <span className="flashcard__tag">Pergunta</span>
+            <span className="flashcard__tag">{t.study.question}</span>
             <h2>{card.title}</h2>
-            <span className="flashcard__hint">Clique ou pressione espaço para ver a resposta</span>
+            <span className="flashcard__hint">{t.study.hint}</span>
           </div>
           <div className="flashcard__face flashcard__back">
-            <span className="flashcard__tag">Resposta</span>
+            <span className="flashcard__tag">{t.study.answer}</span>
             <h3>{card.title}</h3>
             <p>{card.description}</p>
           </div>
@@ -100,21 +102,21 @@ export function StudySession({ dueCards, onReview, onGoToCards, onClearFilter }:
 
       {revealed && (
         <div className="study__actions" ref={actionsRef}>
-          <p className="study__question">Como foi? Escolha quando revisar novamente:</p>
+          <p className="study__question">{t.study.how}</p>
           <div className="study__quick">
             <button className="btn btn--danger" onClick={() => review(1)}>
-              Errei · {formatDays(1)}
+              {t.study.miss} · {t.days(1)}
             </button>
             <button className="btn btn--ghost" onClick={() => review(card.intervalDays)}>
-              Difícil · {formatDays(card.intervalDays)}
+              {t.study.hard} · {t.days(card.intervalDays)}
             </button>
             <button className="btn btn--success" onClick={() => review(suggested)}>
-              Acertei · {formatDays(suggested)}
+              {t.study.hit} · {t.days(suggested)}
             </button>
           </div>
           <details className="study__custom">
-            <summary>Escolher outro intervalo</summary>
-            <IntervalPicker value={null} suggested={suggested} onChange={review} label="Revisar em" />
+            <summary>{t.study.custom}</summary>
+            <IntervalPicker value={null} suggested={suggested} onChange={review} label={t.common.reviewIn} />
           </details>
         </div>
       )}
