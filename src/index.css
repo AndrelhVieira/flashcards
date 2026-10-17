@@ -801,7 +801,7 @@ code {
   gap: 8px;
 }
 
-/* Login */
+/* Tela de configuração pendente */
 .login {
   min-height: 100vh;
   min-height: 100dvh;
@@ -816,35 +816,13 @@ code {
   text-align: center;
 }
 
-.login__logo {
-  border-radius: 18px;
-  box-shadow: var(--shadow);
-}
-
 .login h1 {
   font-size: 1.75rem;
-}
-
-.login__about {
-  color: var(--muted);
-  font-size: 0.9rem;
 }
 
 .login__error {
   color: var(--danger);
   font-size: 0.9rem;
-}
-
-.btn--google {
-  width: 100%;
-  margin-top: 8px;
-  background: var(--surface);
-  border-color: var(--border);
-  box-shadow: var(--shadow);
-}
-
-.btn--google:hover {
-  background: var(--surface-2);
 }
 
 /* Loading */

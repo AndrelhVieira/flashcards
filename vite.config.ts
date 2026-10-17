@@ -6,12 +6,14 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   build: {
     rollupOptions: {
-      // Duas páginas: a landing page (/), que não carrega o Firebase, e o app (/app/).
+      // Duas páginas: a landing page (/), com login, e o app (/app/), que exige sessão.
       input: { landing: 'index.html', app: 'app/index.html' },
       output: {
         // SDK do Firebase muda pouco: em chunk separado fica em cache entre deploys.
+        // O login fica separado do Firestore: a landing page baixa só ele, e sob demanda.
         manualChunks: {
-          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          'firebase-auth': ['firebase/app', 'firebase/auth'],
+          firestore: ['firebase/firestore'],
           react: ['react', 'react-dom', 'react-dom/client'],
         },
       },

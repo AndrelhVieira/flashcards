@@ -1,10 +1,16 @@
+import { useEffect } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { isFirebaseConfigured } from './lib/firebase'
 import { Dashboard } from './components/Dashboard'
-import { LoginScreen } from './components/LoginScreen'
 
 export default function App() {
-  const { user, loading, error, signIn, logOut } = useAuth()
+  const { user, loading, logOut } = useAuth()
+  const signedOut = !loading && !user
+
+  // Sem sessão o app não abre: o login fica na landing page.
+  useEffect(() => {
+    if (isFirebaseConfigured && signedOut) window.location.replace('/')
+  }, [signedOut])
 
   if (!isFirebaseConfigured) {
     return (
@@ -17,7 +23,6 @@ export default function App() {
     )
   }
 
-  if (loading) return <div className="spinner spinner--page" aria-label="Carregando" />
-  if (!user) return <LoginScreen onSignIn={signIn} error={error} />
+  if (!user) return <div className="spinner spinner--page" aria-label="Carregando" />
   return <Dashboard key={user.uid} user={user} onLogout={logOut} />
 }

@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth'
-import { FirebaseError } from 'firebase/app'
-import { auth, clearLocalCache, googleProvider } from '../lib/firebase'
+import { onAuthStateChanged, signOut, type User } from 'firebase/auth'
+import { auth, clearLocalCache } from '../lib/firebase'
 
-const IGNORED_ERRORS = new Set(['auth/popup-closed-by-user', 'auth/cancelled-popup-request'])
-
+/** O login acontece na landing page; aqui o app só acompanha a sessão e faz o logout. */
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(Boolean(auth))
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!auth) return
@@ -18,25 +15,13 @@ export function useAuth() {
     })
   }, [])
 
-  const signIn = useCallback(async () => {
-    if (!auth) return
-    setError(null)
-    try {
-      await signInWithPopup(auth, googleProvider)
-    } catch (err) {
-      if (err instanceof FirebaseError && IGNORED_ERRORS.has(err.code)) return
-      console.error(err)
-      setError('Não foi possível entrar com o Google. Tente novamente.')
-    }
-  }, [])
-
   const logOut = useCallback(async () => {
     if (!auth) return
     await signOut(auth)
     await clearLocalCache()
-    // O Firestore encerrado não pode ser reaberto; recarrega para um estado limpo.
-    window.location.reload()
+    // O Firestore encerrado não pode ser reaberto; a navegação também recarrega o estado.
+    window.location.replace('/')
   }, [])
 
-  return { user, loading, error, signIn, logOut }
+  return { user, loading, logOut }
 }

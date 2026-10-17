@@ -1,8 +1,7 @@
 import type { CSSProperties } from 'react'
 import { INTERVALS } from '../lib/dates'
 import { DemoDeck } from './DemoDeck'
-
-const APP_URL = '/app/'
+import { useSession } from './useSession'
 
 const FREE_POINTS = ['Sem anúncios', 'Sem assinatura', 'Sem plano pago', 'Sem rastreamento']
 
@@ -55,6 +54,8 @@ const FEATURES: [string, string][] = [
 ]
 
 export function Landing() {
+  const { signedIn, error, enter } = useSession()
+
   return (
     <>
       <header className="nav">
@@ -67,9 +68,9 @@ export function Landing() {
           <a href="#vantagens">Vantagens</a>
           <a href="#recursos">Recursos</a>
         </nav>
-        <a href={APP_URL} className="button button--small">
-          Abrir o app
-        </a>
+        <button type="button" className="button button--small" onClick={enter}>
+          {signedIn ? 'Abrir o app' : 'Entrar'}
+        </button>
       </header>
 
       <main id="topo">
@@ -84,13 +85,18 @@ export function Landing() {
               sem assinatura e sem pegadinhas.
             </p>
             <div className="hero__ctas">
-              <a href={APP_URL} className="button">
-                Começar agora
-              </a>
+              <button type="button" className="button" onClick={enter}>
+                {signedIn ? 'Abrir o app' : 'Começar agora'}
+              </button>
               <a href="#como-funciona" className="button button--ghost">
                 Ver como funciona
               </a>
             </div>
+            {error && (
+              <p className="hero__error" role="alert">
+                Não foi possível entrar com o Google. Tente novamente.
+              </p>
+            )}
           </div>
           <DemoDeck />
         </section>
@@ -165,9 +171,9 @@ export function Landing() {
 
         <section className="closing">
           <h2>Seu próximo card leva dez segundos.</h2>
-          <a href={APP_URL} className="button button--light">
-            Entrar com Google
-          </a>
+          <button type="button" className="button button--light" onClick={enter}>
+            {signedIn ? 'Abrir o app' : 'Entrar com Google'}
+          </button>
         </section>
       </main>
 
