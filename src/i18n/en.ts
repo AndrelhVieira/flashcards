@@ -201,7 +201,8 @@ export const en: Messages = {
       title: 'Your next card takes ten seconds.',
       signIn: 'Sign in with Google',
     },
-    footer: 'Flashcards · a personal project by André Vieira',
+    footer: 'Flashcards · a personal project by ',
+    portfolio: 'See André Vieira’s portfolio',
   },
   demo: {
     label: 'Interactive demo',

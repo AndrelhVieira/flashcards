@@ -686,6 +686,15 @@ a {
   }
 }
 
+.footer a {
+  color: var(--ink);
+  text-underline-offset: 3px;
+}
+
+.footer a:hover {
+  color: var(--brand);
+}
+
 .footer {
   display: flex;
   flex-wrap: wrap;
