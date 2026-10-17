@@ -107,7 +107,7 @@ npx firebase-tools deploy --only firestore:rules --project <project-id>
    ```bash
    npm run dev
    ```
-4. Abra http://localhost:5173 e valide:
+4. Abra http://localhost:5173/app/ e valide:
    - [ ] Aparece a tela **Entrar com Google** (e não "Configuração pendente")
    - [ ] O login funciona e mostra seu avatar no canto superior direito
    - [ ] Criar um card → ele aparece em **Meus cards**

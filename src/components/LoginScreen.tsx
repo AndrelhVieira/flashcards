@@ -21,7 +21,7 @@ export function LoginScreen({ onSignIn, error }: Props) {
         </svg>
         Entrar com Google
       </button>
-      <a href="/sobre/" className="login__about">
+      <a href="/" className="login__about">
         Conheça o projeto
       </a>
       {error && (

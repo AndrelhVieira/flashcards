@@ -6,8 +6,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   build: {
     rollupOptions: {
-      // Duas páginas: o app (/) e a landing page (/sobre), que não carrega o Firebase.
-      input: { app: 'index.html', sobre: 'sobre/index.html' },
+      // Duas páginas: a landing page (/), que não carrega o Firebase, e o app (/app/).
+      input: { landing: 'index.html', app: 'app/index.html' },
       output: {
         // SDK do Firebase muda pouco: em chunk separado fica em cache entre deploys.
         manualChunks: {
@@ -28,8 +28,8 @@ export default defineConfig({
         short_name: 'Flashcards',
         description: 'Flashcards com revisão espaçada para memorização.',
         lang: 'pt-BR',
-        start_url: '/',
-        scope: '/',
+        start_url: '/app/',
+        scope: '/app/',
         display: 'standalone',
         orientation: 'portrait',
         theme_color: '#4f46e5',
@@ -43,8 +43,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
-        // Rotas internas do Firebase Auth e a landing page não devem cair no fallback do SPA.
-        navigateFallbackDenylist: [/^\/__\//, /^\/sobre/],
+        // Só as rotas do app caem no fallback do SPA; a landing (/) e o Firebase Auth (/__/) ficam de fora.
+        navigateFallback: 'app/index.html',
+        navigateFallbackAllowlist: [/^\/app(\/|$)/],
       },
     }),
   ],
