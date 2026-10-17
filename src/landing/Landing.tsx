@@ -1,60 +1,18 @@
-import type { CSSProperties } from 'react'
+import { useEffect, type CSSProperties } from 'react'
+import { useI18n } from '../i18n/context'
+import { LanguageSwitch } from '../i18n/LanguageSwitch'
 import { INTERVALS } from '../lib/dates'
 import { DemoDeck } from './DemoDeck'
 import { useSession } from './useSession'
 
-const FREE_POINTS = ['Sem anúncios', 'Sem assinatura', 'Sem plano pago', 'Sem rastreamento']
-
-const BENEFITS = [
-  {
-    title: 'Grátis de verdade',
-    text: 'Todos os recursos liberados para todo mundo. Não existe versão “pro” nem limite escondido.',
-  },
-  {
-    title: 'Celular e computador em sincronia',
-    text: 'Entre com sua conta Google e os cards aparecem na hora em qualquer aparelho.',
-  },
-  {
-    title: 'Funciona offline',
-    text: 'Estude no metrô ou no avião. O que você fizer sem internet é sincronizado sozinho quando ela voltar.',
-  },
-  {
-    title: 'Instala como app',
-    text: 'Toque em “Adicionar à tela inicial” e ele abre em tela cheia, como qualquer app, sem passar por loja.',
-  },
-  {
-    title: 'Categorias e estudo focado',
-    text: 'Organize os cards em quantas categorias quiser e revise só o que importa para a prova de amanhã.',
-  },
-  {
-    title: 'Seus cards são seus',
-    text: 'Faça uma cópia de tudo quando quiser e restaure depois. Nada de ficar preso ao app.',
-  },
-  {
-    title: 'Privacidade por padrão',
-    text: 'Ninguém além de você vê seus cards, nada é rastreado e, ao sair da conta, o aparelho não guarda nada.',
-  },
-  {
-    title: 'Simples de usar',
-    text: 'Frente, verso e quando revisar. Sem fórmula misteriosa: você sempre sabe quando o card volta.',
-  },
-  {
-    title: 'Leve e rápido',
-    text: 'Abre em instantes, até em celular simples, e acompanha o tema claro ou escuro do seu aparelho.',
-  },
-]
-
-const FEATURES: [string, string][] = [
-  ['Estudar', 'Só os cards que venceram hoje, um por vez. Vire, confira e diga como foi.'],
-  ['Meus cards', 'Busque qualquer card, filtre por categoria, edite ou exclua em poucos toques.'],
-  ['Revisar antes', 'Tem prova chegando? Antecipe a revisão de um card sem esperar o dia dele.'],
-  ['Intervalo do seu jeito', 'Use a escada de 1 a 60 dias ou escolha você mesmo quando o card volta.'],
-  ['Categorias', 'Crie as suas, coloque um card em várias e estude uma ou mais de uma vez.'],
-  ['Cópia de segurança', 'Baixe todos os seus cards e categorias em um arquivo e restaure quando quiser.'],
-]
-
 export function Landing() {
   const { signedIn, error, enter } = useSession()
+  const { t } = useI18n()
+  const l = t.landing
+
+  useEffect(() => {
+    document.title = l.title
+  }, [l.title])
 
   return (
     <>
@@ -63,83 +21,81 @@ export function Landing() {
           <img src="/icon.svg" alt="" width={28} height={28} />
           Flashcards
         </a>
-        <nav className="nav__links" aria-label="Seções">
-          <a href="#como-funciona">Como funciona</a>
-          <a href="#vantagens">Vantagens</a>
-          <a href="#recursos">Recursos</a>
+        <nav className="nav__links" aria-label={l.nav.label}>
+          <a href="#como-funciona">{l.nav.how}</a>
+          <a href="#vantagens">{l.nav.benefits}</a>
+          <a href="#recursos">{l.nav.features}</a>
         </nav>
+        <LanguageSwitch className="nav__lang" />
         <button type="button" className="button button--small" onClick={enter}>
-          {signedIn ? 'Abrir o app' : 'Entrar'}
+          {signedIn ? l.nav.open : l.nav.enter}
         </button>
       </header>
 
       <main id="topo">
         <section className="hero">
           <div className="hero__copy">
-            <p className="eyebrow">Revisão espaçada · 100% gratuito</p>
+            <p className="eyebrow">{l.hero.eyebrow}</p>
             <h1>
-              Lembre do que estudou. <em>Sem pagar nada por isso.</em>
+              {l.hero.titleLead} <em>{l.hero.titleEm}</em>
             </h1>
-            <p className="hero__lead">
-              Um app de flashcards direto ao ponto: você escreve o card, ele avisa quando revisar. Sem anúncios,
-              sem assinatura e sem pegadinhas.
-            </p>
+            <p className="hero__lead">{l.hero.lead}</p>
             <div className="hero__ctas">
               <button type="button" className="button" onClick={enter}>
-                {signedIn ? 'Abrir o app' : 'Começar agora'}
+                {signedIn ? l.nav.open : l.hero.start}
               </button>
               <a href="#como-funciona" className="button button--ghost">
-                Ver como funciona
+                {l.hero.seeHow}
               </a>
             </div>
             {error && (
               <p className="hero__error" role="alert">
-                Não foi possível entrar com o Google. Tente novamente.
+                {l.hero.error}
               </p>
             )}
           </div>
           <DemoDeck />
         </section>
 
-        <ul className="free-strip" aria-label="O que você não vai encontrar aqui">
-          {FREE_POINTS.map((p) => (
+        <ul className="free-strip" aria-label={l.free.label}>
+          {l.free.points.map((p) => (
             <li key={p}>{p}</li>
           ))}
         </ul>
 
         <section id="como-funciona" className="section how">
-          <h2 className="section__title">Como funciona</h2>
+          <h2 className="section__title">{l.how.title}</h2>
           <ol className="steps">
             <li>
-              <h3>Crie o card</h3>
-              <p>Escreva a pergunta na frente, a resposta no verso e escolha em quantos dias quer revisar.</p>
+              <h3>{l.how.createTitle}</h3>
+              <p>{l.how.createText}</p>
             </li>
             <li>
-              <h3>Estude o que venceu</h3>
-              <p>A aba Estudar mostra só os cards do dia. Toque para virar e confira se lembrou.</p>
+              <h3>{l.how.studyTitle}</h3>
+              <p>{l.how.studyText}</p>
             </li>
             <li>
-              <h3>Responda com sinceridade</h3>
+              <h3>{l.how.answerTitle}</h3>
               <p>
-                <strong>Errei</strong> volta amanhã, <strong>Difícil</strong> mantém o intervalo e{' '}
-                <strong>Acertei</strong> sobe um degrau na escada:
+                <strong>{t.study.miss}</strong> {l.how.missText} <strong>{t.study.hard}</strong> {l.how.hardText}{' '}
+                <strong>{t.study.hit}</strong> {l.how.hitText}
               </p>
             </li>
           </ol>
-          <ol className="ladder" aria-label="Intervalos de revisão em dias">
+          <ol className="ladder" aria-label={l.how.ladderLabel}>
             {INTERVALS.map((days, i) => (
               <li key={days} style={{ '--step': i } as CSSProperties}>
                 <span className="ladder__days">{days}</span>
-                <span className="ladder__unit">{days === 1 ? 'dia' : 'dias'}</span>
+                <span className="ladder__unit">{l.how.dayUnit(days)}</span>
               </li>
             ))}
           </ol>
         </section>
 
         <section id="vantagens" className="section">
-          <h2 className="section__title">Por que usar</h2>
+          <h2 className="section__title">{l.benefits.title}</h2>
           <ul className="benefits">
-            {BENEFITS.map((b, i) => (
+            {l.benefits.items.map((b, i) => (
               <li key={b.title}>
                 <span className="benefits__num" aria-hidden>
                   {String(i + 1).padStart(2, '0')}
@@ -153,14 +109,11 @@ export function Landing() {
 
         <section id="recursos" className="section inside">
           <div className="inside__intro">
-            <h2 className="section__title">Tudo o que vem dentro</h2>
-            <p>
-              Nada de recurso bloqueado: assim que você entra, já tem tudo isto para organizar e acompanhar seus
-              estudos.
-            </p>
+            <h2 className="section__title">{l.features.title}</h2>
+            <p>{l.features.intro}</p>
           </div>
           <dl className="specs">
-            {FEATURES.map(([term, desc]) => (
+            {l.features.items.map(([term, desc]) => (
               <div key={term}>
                 <dt>{term}</dt>
                 <dd>{desc}</dd>
@@ -170,15 +123,15 @@ export function Landing() {
         </section>
 
         <section className="closing">
-          <h2>Seu próximo card leva dez segundos.</h2>
+          <h2>{l.closing.title}</h2>
           <button type="button" className="button button--light" onClick={enter}>
-            {signedIn ? 'Abrir o app' : 'Entrar com Google'}
+            {signedIn ? l.nav.open : l.closing.signIn}
           </button>
         </section>
       </main>
 
       <footer className="footer">
-        <span>Flashcards · projeto pessoal de André Vieira</span>
+        <span>{l.footer}</span>
       </footer>
     </>
   )

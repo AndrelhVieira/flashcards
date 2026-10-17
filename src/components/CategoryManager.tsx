@@ -1,5 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { MAX_CATEGORY_NAME, type Category, type Flashcard } from '../types'
+import { useI18n } from '../i18n/context'
+import type { Messages } from '../i18n/pt'
 
 interface Props {
   categories: Category[]
@@ -10,15 +12,16 @@ interface Props {
 }
 
 /** Valida o nome e devolve a mensagem de erro, se houver. */
-function validate(name: string, categories: Category[], ignoreId?: string): string | null {
-  if (!name) return 'Informe um nome.'
+function validate(t: Messages, name: string, categories: Category[], ignoreId?: string): string | null {
+  if (!name) return t.categories.nameRequired
   const taken = categories.some(
     (c) => c.id !== ignoreId && c.name.localeCompare(name, 'pt-BR', { sensitivity: 'base' }) === 0,
   )
-  return taken ? 'Já existe uma categoria com esse nome.' : null
+  return taken ? t.categories.nameTaken : null
 }
 
 export function CategoryManager({ categories, cards, onAdd, onRename, onDelete }: Props) {
+  const { t } = useI18n()
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -34,7 +37,7 @@ export function CategoryManager({ categories, cards, onAdd, onRename, onDelete }
   function handleAdd(e: FormEvent) {
     e.preventDefault()
     const trimmed = name.trim()
-    const problem = validate(trimmed, categories)
+    const problem = validate(t, trimmed, categories)
     setError(problem)
     if (problem) return
     onAdd(trimmed)
@@ -51,7 +54,7 @@ export function CategoryManager({ categories, cards, onAdd, onRename, onDelete }
     e.preventDefault()
     if (!editingId) return
     const trimmed = editingName.trim()
-    const problem = validate(trimmed, categories, editingId)
+    const problem = validate(t, trimmed, categories, editingId)
     setEditingError(problem)
     if (problem) return
     onRename(editingId, trimmed)
@@ -59,15 +62,13 @@ export function CategoryManager({ categories, cards, onAdd, onRename, onDelete }
   }
 
   function handleDelete(category: Category) {
-    const used = counts[category.id] ?? 0
-    const detail = used > 0 ? ` Ela será removida de ${used} ${used === 1 ? 'card' : 'cards'}, que não serão excluídos.` : ''
-    if (confirm(`Excluir a categoria "${category.name}"?${detail}`)) onDelete(category.id)
+    if (confirm(t.categories.confirmDelete(category.name, counts[category.id] ?? 0))) onDelete(category.id)
   }
 
   return (
     <details className="panel categories">
       <summary className="panel__title categories__summary">
-        Categorias
+        {t.common.categories}
         <span className="tab__count tab__count--muted">{categories.length}</span>
       </summary>
 
@@ -79,13 +80,13 @@ export function CategoryManager({ categories, cards, onAdd, onRename, onDelete }
             setName(e.target.value)
             setError(null)
           }}
-          placeholder="Nova categoria, ex.: JavaScript"
+          placeholder={t.categories.placeholder}
           maxLength={MAX_CATEGORY_NAME}
-          aria-label="Nome da nova categoria"
+          aria-label={t.categories.newNameLabel}
           aria-invalid={!!error}
         />
         <button type="submit" className="btn btn--primary">
-          Criar
+          {t.categories.create}
         </button>
       </form>
       {error && (
@@ -96,7 +97,7 @@ export function CategoryManager({ categories, cards, onAdd, onRename, onDelete }
 
       {categories.length === 0 ? (
         <p className="muted categories__empty">
-          Crie categorias para agrupar seus cards e revisar por assunto.
+          {t.categories.empty}
         </p>
       ) : (
         <ul className="categories__list">
@@ -112,15 +113,15 @@ export function CategoryManager({ categories, cards, onAdd, onRename, onDelete }
                       setEditingError(null)
                     }}
                     maxLength={MAX_CATEGORY_NAME}
-                    aria-label={`Novo nome para ${category.name}`}
+                    aria-label={t.categories.renameLabel(category.name)}
                     aria-invalid={!!editingError}
                     autoFocus
                   />
                   <button type="button" className="btn btn--small btn--ghost" onClick={() => setEditingId(null)}>
-                    Cancelar
+                    {t.common.cancel}
                   </button>
                   <button type="submit" className="btn btn--small btn--primary">
-                    Salvar
+                    {t.common.save}
                   </button>
                 </form>
                 {editingError && (
@@ -134,21 +135,21 @@ export function CategoryManager({ categories, cards, onAdd, onRename, onDelete }
                 <div className="categories__row">
                   <span className="categories__name">{category.name}</span>
                   <span className="muted categories__count">
-                    {counts[category.id] ?? 0} {(counts[category.id] ?? 0) === 1 ? 'card' : 'cards'}
+                    {t.categories.count(counts[category.id] ?? 0)}
                   </span>
                   <button
                     className="btn btn--small btn--ghost"
                     onClick={() => startEditing(category)}
-                    aria-label={`Renomear ${category.name}`}
+                    aria-label={t.categories.renameAria(category.name)}
                   >
-                    Renomear
+                    {t.categories.rename}
                   </button>
                   <button
                     className="btn btn--small btn--ghost btn--danger-text"
                     onClick={() => handleDelete(category)}
-                    aria-label={`Excluir ${category.name}`}
+                    aria-label={t.categories.deleteAria(category.name)}
                   >
-                    Excluir
+                    {t.common.delete}
                   </button>
                 </div>
               </li>

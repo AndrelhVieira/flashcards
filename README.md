@@ -15,6 +15,7 @@ React + TypeScript + Vite, com Firebase (Auth + Firestore) como backend.
 - **Meus cards**: buscar, filtrar por categoria, editar, excluir ou antecipar a revisão.
 - **Categorias**: crie categorias personalizadas e coloque cada card em quantas quiser. Na aba Estudar, escolha uma ou mais categorias para revisar só os cards vencidos delas (a escolha fica salva no aparelho).
 - **Landing page** (`/`): página inicial com uma demonstração interativa e o login com Google. O app em si fica em `/app/` e só abre com sessão ativa (sem login, volta para `/`). A landing é uma entrada separada do Vite: o Firestore nunca é carregado nela e o Firebase Auth é baixado sob demanda. Aberta como app instalado e com sessão, vai direto para `/app/`.
+- **Idiomas**: português (padrão) e inglês, trocados pelo menu do avatar no app ou pelo botão no topo da landing. A escolha fica salva no aparelho e vale para as duas páginas.
 - **Backup**: exportar/importar JSON (cards e categorias) pelo menu do avatar; backups antigos, só com cards, continuam aceitos. Cards da versão antiga (localStorage) são oferecidos para importação no primeiro login.
 
 ## Configuração do Firebase (uma vez)
@@ -74,6 +75,7 @@ O GitHub Actions (`.github/workflows/ci.yml`) roda tudo isso a cada push e pull 
 
 ```
 src/
+  i18n/                textos em pt.ts (padrão) e en.ts (mesmo formato, checado pelo TypeScript), provider e troca de idioma
   lib/auth.ts          inicialização do Firebase e do Auth (também usado pela landing)
   lib/firebase.ts      Firestore com cache offline
   lib/dates.ts         intervalos e cálculo de datas

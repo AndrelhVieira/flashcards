@@ -1,35 +1,9 @@
 import { useState } from 'react'
-import { formatDays, nextInterval } from '../lib/dates'
+import { useI18n } from '../i18n/context'
+import { nextInterval } from '../lib/dates'
 
-interface DemoCard {
-  front: string
-  back: string
-  /** Intervalo atual do card, em dias. */
-  interval: number
-}
-
-const DECK: DemoCard[] = [
-  {
-    front: 'O que é revisão espaçada?',
-    back: 'Rever um conteúdo em intervalos cada vez maiores, pouco antes de você esquecê-lo.',
-    interval: 3,
-  },
-  {
-    front: 'Quanto custa este app?',
-    back: 'Nada. Sem anúncios, sem assinatura e sem recurso escondido atrás de um plano pago.',
-    interval: 7,
-  },
-  {
-    front: 'Funciona sem internet?',
-    back: 'Sim. Estude offline e tudo sincroniza sozinho quando a conexão voltar.',
-    interval: 1,
-  },
-  {
-    front: 'Meus cards ficam presos aqui?',
-    back: 'Não. Faça uma cópia de todos os seus cards quando quiser e leve para onde precisar.',
-    interval: 15,
-  },
-]
+/** Intervalo atual (em dias) de cada card da demonstração; os textos vêm do i18n, na mesma ordem. */
+const DECK_INTERVALS = [3, 7, 1, 15]
 
 type Answer = 'errei' | 'dificil' | 'acertei'
 
@@ -41,21 +15,22 @@ function scheduleFor(answer: Answer, interval: number) {
 }
 
 export function DemoDeck() {
+  const { t } = useI18n()
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
-  const [feedback, setFeedback] = useState<string | null>(null)
+  /** Dias até o card respondido voltar; o texto é montado no idioma atual. */
+  const [feedbackDays, setFeedbackDays] = useState<number | null>(null)
 
-  const card = DECK[index]
+  const card = { ...t.demo.cards[index], interval: DECK_INTERVALS[index] }
 
   function answer(a: Answer) {
-    const days = scheduleFor(a, card.interval)
-    setFeedback(days === 1 ? 'Volta amanhã.' : `Volta em ${formatDays(days)}.`)
+    setFeedbackDays(scheduleFor(a, card.interval))
     setFlipped(false)
-    setIndex((i) => (i + 1) % DECK.length)
+    setIndex((i) => (i + 1) % DECK_INTERVALS.length)
   }
 
   return (
-    <div className="demo" aria-label="Demonstração interativa">
+    <div className="demo" aria-label={t.demo.label}>
       <div className="demo__stack">
         <span className="demo__shadow demo__shadow--2" aria-hidden />
         <span className="demo__shadow demo__shadow--1" aria-hidden />
@@ -65,15 +40,15 @@ export function DemoDeck() {
           className={`demo__card${flipped ? ' demo__card--flipped' : ''}`}
           onClick={() => setFlipped((f) => !f)}
           aria-pressed={flipped}
-          aria-label={flipped ? `Resposta: ${card.back}` : `Pergunta: ${card.front}. Toque para ver a resposta.`}
+          aria-label={flipped ? t.demo.answerAria(card.back) : t.demo.questionAria(card.front)}
         >
           <span className="demo__face demo__face--front">
-            <span className="demo__tag">Frente · revisa a cada {formatDays(card.interval)}</span>
+            <span className="demo__tag">{t.demo.frontTag(card.interval)}</span>
             <span className="demo__text">{card.front}</span>
-            <span className="demo__hint">toque para virar</span>
+            <span className="demo__hint">{t.demo.hint}</span>
           </span>
           <span className="demo__face demo__face--back">
-            <span className="demo__tag">Verso</span>
+            <span className="demo__tag">{t.demo.backTag}</span>
             <span className="demo__text demo__text--back">{card.back}</span>
           </span>
         </button>
@@ -81,17 +56,17 @@ export function DemoDeck() {
 
       <div className="demo__actions" data-visible={flipped}>
         <button type="button" className="chip chip--miss" onClick={() => answer('errei')} disabled={!flipped}>
-          Errei
+          {t.study.miss}
         </button>
         <button type="button" className="chip" onClick={() => answer('dificil')} disabled={!flipped}>
-          Difícil
+          {t.study.hard}
         </button>
         <button type="button" className="chip chip--hit" onClick={() => answer('acertei')} disabled={!flipped}>
-          Acertei
+          {t.study.hit}
         </button>
       </div>
       <p className="demo__feedback" role="status">
-        {feedback ?? 'Experimente: vire o card e responda.'}
+        {feedbackDays === null ? t.demo.idle : t.demo.feedback(feedbackDays)}
       </p>
     </div>
   )

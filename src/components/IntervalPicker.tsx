@@ -1,4 +1,5 @@
-import { INTERVALS, formatDays } from '../lib/dates'
+import { INTERVALS } from '../lib/dates'
+import { useI18n } from '../i18n/context'
 
 interface Props {
   value: number | null
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function IntervalPicker({ value, onChange, suggested, label }: Props) {
+  const { t } = useI18n()
   return (
     <div className="interval-picker" role="radiogroup" aria-label={label}>
       {INTERVALS.map((days) => (
@@ -18,9 +20,9 @@ export function IntervalPicker({ value, onChange, suggested, label }: Props) {
           aria-checked={value === days}
           className={`chip${value === days ? ' chip--active' : ''}${suggested === days ? ' chip--suggested' : ''}`}
           onClick={() => onChange(days)}
-          title={suggested === days ? 'Sugerido' : undefined}
+          title={suggested === days ? t.interval.suggested : undefined}
         >
-          {formatDays(days)}
+          {t.days(days)}
         </button>
       ))}
     </div>

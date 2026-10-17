@@ -1,5 +1,7 @@
 import { useEffect, useRef, type ChangeEvent } from 'react'
 import type { User } from 'firebase/auth'
+import { useI18n } from '../i18n/context'
+import { LanguageSwitch } from '../i18n/LanguageSwitch'
 
 interface Props {
   user: User
@@ -10,6 +12,7 @@ interface Props {
 }
 
 export function UserMenu({ user, canExport, onExport, onImportFile, onLogout }: Props) {
+  const { t } = useI18n()
   const menuRef = useRef<HTMLDetailsElement>(null)
   const fileInput = useRef<HTMLInputElement>(null)
 
@@ -36,7 +39,7 @@ export function UserMenu({ user, canExport, onExport, onImportFile, onLogout }: 
 
   return (
     <details className="menu" ref={menuRef}>
-      <summary className="menu__trigger" aria-label="Menu da conta">
+      <summary className="menu__trigger" aria-label={t.menu.account}>
         {user.photoURL ? (
           <img src={user.photoURL} alt="" className="avatar" referrerPolicy="no-referrer" />
         ) : (
@@ -56,7 +59,7 @@ export function UserMenu({ user, canExport, onExport, onImportFile, onLogout }: 
             close()
           }}
         >
-          Exportar backup
+          {t.menu.export}
         </button>
         <button
           className="menu__item"
@@ -65,10 +68,11 @@ export function UserMenu({ user, canExport, onExport, onImportFile, onLogout }: 
             close()
           }}
         >
-          Importar backup
+          {t.menu.import}
         </button>
+        <LanguageSwitch className="menu__item" onSwitch={close} />
         <button className="menu__item menu__item--danger" onClick={onLogout}>
-          Sair
+          {t.menu.logout}
         </button>
         <input ref={fileInput} type="file" accept="application/json" hidden onChange={handleFile} />
       </div>

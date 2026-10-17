@@ -126,11 +126,25 @@ a {
   color: var(--ink);
 }
 
+.nav__lang {
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.nav__lang:hover {
+  color: var(--ink);
+}
+
 @media (max-width: 720px) {
   .nav__links {
     display: none;
   }
-  .nav .button {
+  .nav__lang {
     margin-left: auto;
   }
 }

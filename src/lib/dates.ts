@@ -32,19 +32,11 @@ export function nextInterval(current: number): number {
   return INTERVALS.find((i) => i > current) ?? INTERVALS[INTERVALS.length - 1]
 }
 
-export function formatDays(days: number): string {
-  return days === 1 ? '1 dia' : `${days} dias`
-}
-
-/** Descrição relativa amigável de uma data YYYY-MM-DD. */
-export function describeReview(nextReview: string): string {
+/** Dias entre hoje e uma data YYYY-MM-DD (negativo quando já passou). O texto vem do i18n. */
+export function daysUntil(nextReview: string): number {
   const [y, m, d] = nextReview.split('-').map(Number)
   const target = new Date(y, m - 1, d)
   const now = new Date()
   now.setHours(0, 0, 0, 0)
-  const diff = Math.round((target.getTime() - now.getTime()) / 86_400_000)
-  if (diff < 0) return `atrasado há ${formatDays(-diff)}`
-  if (diff === 0) return 'hoje'
-  if (diff === 1) return 'amanhã'
-  return `em ${formatDays(diff)}`
+  return Math.round((target.getTime() - now.getTime()) / 86_400_000)
 }

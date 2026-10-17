@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { I18nProvider } from '../i18n/I18nProvider'
 import { Landing } from './Landing'
 import { APP_URL } from './useSession'
 import './landing.css'
@@ -7,7 +8,9 @@ import './landing.css'
 function render() {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <Landing />
+      <I18nProvider>
+        <Landing />
+      </I18nProvider>
     </StrictMode>,
   )
 }

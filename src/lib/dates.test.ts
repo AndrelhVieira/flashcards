@@ -2,8 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   INTERVALS,
   addDays,
-  describeReview,
-  formatDays,
+  daysUntil,
   isDue,
   nextInterval,
   toLocalDate,
@@ -46,16 +45,10 @@ describe('dates', () => {
     expect(nextInterval(365)).toBe(INTERVALS[INTERVALS.length - 1])
   })
 
-  it('formata quantidade de dias no singular e plural', () => {
-    expect(formatDays(1)).toBe('1 dia')
-    expect(formatDays(5)).toBe('5 dias')
-  })
-
-  it('descreve a próxima revisão em linguagem natural', () => {
-    expect(describeReview('2026-10-12')).toBe('hoje')
-    expect(describeReview('2026-10-13')).toBe('amanhã')
-    expect(describeReview('2026-10-17')).toBe('em 5 dias')
-    expect(describeReview('2026-10-11')).toBe('atrasado há 1 dia')
-    expect(describeReview('2026-10-02')).toBe('atrasado há 10 dias')
+  it('conta os dias até a próxima revisão', () => {
+    expect(daysUntil('2026-10-12')).toBe(0)
+    expect(daysUntil('2026-10-13')).toBe(1)
+    expect(daysUntil('2026-10-17')).toBe(5)
+    expect(daysUntil('2026-10-11')).toBe(-1)
   })
 })
