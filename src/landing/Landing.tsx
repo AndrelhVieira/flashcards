@@ -2,10 +2,9 @@ import type { CSSProperties } from 'react'
 import { INTERVALS } from '../lib/dates'
 import { DemoDeck } from './DemoDeck'
 
-const APP_URL = '/'
-const REPO_URL = 'https://github.com/AndrelhVieira/flashcards'
+const APP_URL = '/app/'
 
-const FREE_POINTS = ['Sem anúncios', 'Sem assinatura', 'Sem paywall', 'Sem rastreadores']
+const FREE_POINTS = ['Sem anúncios', 'Sem assinatura', 'Sem plano pago', 'Sem rastreamento']
 
 const BENEFITS = [
   {
@@ -14,46 +13,45 @@ const BENEFITS = [
   },
   {
     title: 'Celular e computador em sincronia',
-    text: 'Entre com sua conta Google e os cards aparecem em tempo real em qualquer aparelho.',
+    text: 'Entre com sua conta Google e os cards aparecem na hora em qualquer aparelho.',
   },
   {
     title: 'Funciona offline',
-    text: 'Estude no metrô ou no avião. As alterações sincronizam sozinhas quando a internet voltar.',
+    text: 'Estude no metrô ou no avião. O que você fizer sem internet é sincronizado sozinho quando ela voltar.',
   },
   {
     title: 'Instala como app',
-    text: 'É um PWA: “Adicionar à tela inicial” e ele abre em tela cheia, como um app nativo, sem loja.',
+    text: 'Toque em “Adicionar à tela inicial” e ele abre em tela cheia, como qualquer app, sem passar por loja.',
   },
   {
     title: 'Categorias e estudo focado',
     text: 'Organize os cards em quantas categorias quiser e revise só o que importa para a prova de amanhã.',
   },
   {
-    title: 'Seus dados são seus',
-    text: 'Exporte e importe tudo em JSON a qualquer momento. Nada de ficar preso à ferramenta.',
+    title: 'Seus cards são seus',
+    text: 'Faça uma cópia de tudo quando quiser e restaure depois. Nada de ficar preso ao app.',
   },
   {
     title: 'Privacidade por padrão',
-    text: 'Cada conta só enxerga os próprios cards, não há analytics e sair da conta apaga o cache do aparelho.',
+    text: 'Ninguém além de você vê seus cards, nada é rastreado e, ao sair da conta, o aparelho não guarda nada.',
   },
   {
     title: 'Simples de usar',
-    text: 'Frente, verso e quando revisar. Sem algoritmo misterioso: você sempre sabe quando o card volta.',
+    text: 'Frente, verso e quando revisar. Sem fórmula misteriosa: você sempre sabe quando o card volta.',
   },
   {
     title: 'Leve e rápido',
-    text: 'Só duas dependências em produção (React e Firebase) e tema claro ou escuro seguindo o sistema.',
+    text: 'Abre em instantes, até em celular simples, e acompanha o tema claro ou escuro do seu aparelho.',
   },
 ]
 
-const SPECS: [string, string][] = [
-  ['Interface', 'React 19 + TypeScript (strict) + Vite'],
-  ['Backend', 'Firebase Auth (Google) + Firestore com cache offline persistente'],
-  ['Segurança dos dados', 'Regras do Firestore por usuário, com validação de esquema e testes no emulador'],
-  ['Segurança HTTP', 'CSP restrita, nosniff, Referrer-Policy, Permissions-Policy e COOP'],
-  ['Qualidade', 'Testes de componentes, hooks e regras com Vitest e Testing Library'],
-  ['Entrega', 'CI no GitHub Actions (lint, tipos, testes, build) e deploy contínuo na Vercel'],
-  ['Custo de infraestrutura', 'R$ 0 — Firebase Spark e Vercel Hobby'],
+const FEATURES: [string, string][] = [
+  ['Estudar', 'Só os cards que venceram hoje, um por vez. Vire, confira e diga como foi.'],
+  ['Meus cards', 'Busque qualquer card, filtre por categoria, edite ou exclua em poucos toques.'],
+  ['Revisar antes', 'Tem prova chegando? Antecipe a revisão de um card sem esperar o dia dele.'],
+  ['Intervalo do seu jeito', 'Use a escada de 1 a 60 dias ou escolha você mesmo quando o card volta.'],
+  ['Categorias', 'Crie as suas, coloque um card em várias e estude uma ou mais de uma vez.'],
+  ['Cópia de segurança', 'Baixe todos os seus cards e categorias em um arquivo e restaure quando quiser.'],
 ]
 
 export function Landing() {
@@ -67,7 +65,7 @@ export function Landing() {
         <nav className="nav__links" aria-label="Seções">
           <a href="#como-funciona">Como funciona</a>
           <a href="#vantagens">Vantagens</a>
-          <a href="#por-dentro">Por dentro</a>
+          <a href="#recursos">Recursos</a>
         </nav>
         <a href={APP_URL} className="button button--small">
           Abrir o app
@@ -147,19 +145,16 @@ export function Landing() {
           </ul>
         </section>
 
-        <section id="por-dentro" className="section inside">
+        <section id="recursos" className="section inside">
           <div className="inside__intro">
-            <h2 className="section__title">Por dentro</h2>
+            <h2 className="section__title">Tudo o que vem dentro</h2>
             <p>
-              Projeto pessoal construído com o mesmo cuidado de um produto: testes, revisão de segurança,
-              integração contínua e custo zero para manter no ar.
+              Nada de recurso bloqueado: assim que você entra, já tem tudo isto para organizar e acompanhar seus
+              estudos.
             </p>
-            <a href={REPO_URL} className="link" target="_blank" rel="noreferrer">
-              Código no GitHub →
-            </a>
           </div>
           <dl className="specs">
-            {SPECS.map(([term, desc]) => (
+            {FEATURES.map(([term, desc]) => (
               <div key={term}>
                 <dt>{term}</dt>
                 <dd>{desc}</dd>
@@ -178,9 +173,6 @@ export function Landing() {
 
       <footer className="footer">
         <span>Flashcards · projeto pessoal de André Vieira</span>
-        <a href={REPO_URL} target="_blank" rel="noreferrer">
-          GitHub
-        </a>
       </footer>
     </>
   )

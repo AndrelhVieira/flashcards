@@ -26,7 +26,7 @@ const DECK: DemoCard[] = [
   },
   {
     front: 'Meus cards ficam presos aqui?',
-    back: 'Não. Exporte tudo em JSON quando quiser e importe de volta em outra conta.',
+    back: 'Não. Faça uma cópia de todos os seus cards quando quiser e leve para onde precisar.',
     interval: 15,
   },
 ]
