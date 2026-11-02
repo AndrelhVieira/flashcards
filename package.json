@@ -44,5 +44,14 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "overrides": {
+    "@grpc/grpc-js@~1.9.0": "^1.14.7",
+    "superstatic": {
+      "re2": "^1.26.1"
+    },
+    "gaxios@6": {
+      "uuid": "^11.1.1"
+    }
   }
 }
